@@ -1,0 +1,19 @@
+body {
+    font-family: 'Red Hat Display', sans-serif;
+}
+
+.center {
+    text-align: center;
+}
+
+.checkbox-label{
+    color: white;
+}
+
+.states {
+    stroke: #000;
+}
+
+.viz-title {
+    font-size: 48px;
+}
