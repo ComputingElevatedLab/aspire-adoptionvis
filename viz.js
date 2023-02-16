@@ -384,7 +384,7 @@ let hashmap_metrics={};
     let shpLayer = new ol.layer.Vector({
         source: shpSource,
         style: function(feature) {
-            console.log(feature);
+           // console.log(feature);
             let color='gray';
             let value = feature.values_[selected_metric];
             if(hashmap_metrics[value]/array_metrics.length<=0.2)
@@ -512,7 +512,7 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
     //     return 'circle';
     // })
     if(poi_features.length===0) {
-        console.log("aagaye yeh power rangersss");
+        //console.log("aagaye yeh power rangersss");
         let thing=0;
             for(thing=0;thing<data1.length;thing++){
             // pf.setStyle(
@@ -1219,7 +1219,7 @@ function drawMap() {
                 svg_map.selectAll('circle').remove()
                 current_showing_data_name = mouse_overed_state_full_name;
                 getMapData(mouse_overed_state_id).then(() => {
-                    drawMap();
+                    //drawMap();
                     drawStations();
                 });
 
@@ -1232,14 +1232,14 @@ function init() {
     getMapData("USA").then(() => {
             current_showing_data_name = "USA";
             current_showing_state_postal = "USA";
-            drawMap();
+            //drawMap();
            // init_for_map();
         let popup = document.getElementById("myPopup");
         popup.classList.toggle("show");
             drawStations();
-            document.getElementById("main_title_h2").innerHTML = "Alternative Fuel Stations Construction in the U.S.";
-        document.getElementById("construction_h3").innerHTML = "Yearly construction for the U.S.";
-        document.getElementById("policy_h3").innerHTML = "New Policy for the U.S.";
+        //     document.getElementById("main_title_h2").innerHTML = "Alternative Fuel Stations Construction in the U.S.";
+        // document.getElementById("construction_h3").innerHTML = "Yearly construction for the U.S.";
+        // document.getElementById("policy_h3").innerHTML = "New Policy for the U.S.";
 
         }
     );
