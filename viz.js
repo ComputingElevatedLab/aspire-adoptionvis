@@ -3,8 +3,8 @@ let width = document.body.clientWidth * 0.64;
 let height = 500;
 let file_location = 'data/stations.csv';
 let svg_map = d3.select('#stations-over-time-viz').append('svg')
-    .attr('width', width)
-    .attr('height', height);
+    .attr('width', 0)
+    .attr('height', 0);
 
 let myExtent = [
     -12553481.8104441,
