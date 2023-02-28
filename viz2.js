@@ -13,48 +13,6 @@ let myExtent = [
     5097419.815963253
 ];
 
-function divideArray(array, numOfPartitions) {
-    const frequencyMap = {};
-    const partitions = [];
-
-    // Count frequency of each element in the array
-    array.forEach(element => {
-        if (!frequencyMap[element]) {
-            frequencyMap[element] = 1;
-        } else {
-            frequencyMap[element]++;
-        }
-    });
-
-    // Sort the elements based on frequency
-    const sortedArray = array.sort((a, b) => frequencyMap[a] - frequencyMap[b]);
-
-    // Calculate target frequency
-    const targetFrequency = array.length / numOfPartitions;
-
-    // Create partitions
-    let partitionIndex = 0;
-    while (sortedArray.length > 0) {
-        if (!partitions[partitionIndex]) {
-            partitions[partitionIndex] = [];
-        }
-
-        const currentElement = sortedArray.shift();
-        partitions[partitionIndex].push(currentElement);
-        frequencyMap[currentElement]--;
-
-        if (partitions[partitionIndex].length === targetFrequency) {
-            partitionIndex++;
-        }
-
-        if (frequencyMap[currentElement] === 0) {
-            delete frequencyMap[currentElement];
-        }
-    }
-
-    return partitions;
-}
-
 let center=ol.proj.fromLonLat([-111.0937, 39.3210]);
 let zoom=6;
 
@@ -217,7 +175,7 @@ function init() {
         bdData[year] = allData['bd'][year];
         elecData[year] = allData['elec'][year];
         hyData[year] = allData['hy'][year];
-        
+
         data = data.concat(allData['cng'][year]);
         data = data.concat(allData['lng'][year]);
         data = data.concat(allData['lpg'][year]);
@@ -256,38 +214,23 @@ function hideLoader(){
     document.getElementById("loader").style.visibility='hidden';
 }
 
-function set_maps(){
-    url=document.documentURI;
-    console.log(url.slice(-15));
-    if(url.slice(-15)==="index_base.html") {
-        console.log("Iframe base??");
-        myExtent = map.getView().calculateExtent(map.getSize());
-        zoom=map.getView().getZoom();
-        center=map.getView().getCenter();
-        let iframe_1 = parent.document.getElementById('iframe1');
-        iframe_1.contentWindow.postMessage(map.getView().calculateExtent(map.getSize())+","+map.getView().getZoom()+","+map.getView().getCenter(), '*');
-        let iframe_2 = parent.document.getElementById('iframe2');
-        iframe_2.contentWindow.postMessage(map.getView().calculateExtent(map.getSize())+","+map.getView().getZoom()+","+map.getView().getCenter(), '*');
-        let iframe_3 = parent.document.getElementById('iframe3');
-        iframe_3.contentWindow.postMessage(map.getView().calculateExtent(map.getSize())+","+map.getView().getZoom()+","+map.getView().getCenter(), '*');
-    }
-}
+window.addEventListener('message', (event) => {
+    console.log('Received message from base:', event.data);
+    let arr=event.data.split(',');
+    myExtent=[+arr[0],+arr[1],+arr[2],+arr[3]];
+    zoom=+arr[4];
+    center=[+arr[5],+arr[6]];
+    console.log("zoom"+typeof zoom);
+    console.log("center"+typeof center);
+    let view = map.getView();
+    view.setCenter(center);
+    view.setZoom(zoom);
+    // view.setExtent(myExtent);-
+    drawStations();
+    // alert(event.data);
+});
 
 function drawStations() {
-    url=document.documentURI;
-    console.log(url.slice(-15));
-    if(url.slice(-15)==="index_base.html") {
-        console.log("Iframe base??");
-        myExtent = map.getView().calculateExtent(map.getSize());
-        zoom=map.getView().getZoom();
-        center=map.getView().getCenter();
-        let iframe_1 = parent.document.getElementById('iframe1');
-        iframe_1.contentWindow.postMessage(map.getView().calculateExtent(map.getSize())+","+map.getView().getZoom()+","+map.getView().getCenter(), '*');
-        let iframe_2 = parent.document.getElementById('iframe2');
-        iframe_2.contentWindow.postMessage(map.getView().calculateExtent(map.getSize())+","+map.getView().getZoom()+","+map.getView().getCenter(), '*');
-        let iframe_3 = parent.document.getElementById('iframe3');
-        iframe_3.contentWindow.postMessage(map.getView().calculateExtent(map.getSize())+","+map.getView().getZoom()+","+map.getView().getCenter(), '*');
-    }
     let popup = document.getElementById("myPopup");
     window.onkeydown = function(event) {
         if (event.keyCode === 72) {
@@ -382,9 +325,9 @@ function drawStations() {
     let thing=0;
     let selected_metric='';
     $('input:radio').each(function () {
-                if($(this).is(':checked'))
-                    selected_metric=$(this).val();
-        })
+        if($(this).is(':checked'))
+            selected_metric=$(this).val();
+    })
     // for(i = 0; i < ele.length; i++) {
     //     console.log(ele[i]+"the element");
     //         if(ele[i].checked)
@@ -392,17 +335,12 @@ function drawStations() {
     // }
     console.log(selected_metric+"The selected metric");
     for(thing=0;thing<shp_features.features.length;thing++){
-        let multiplier=1;
-        if (selected_metric === 'lowincfpct') {
-            console.log("check " + shp_features.features[thing].properties['population']);
-            multiplier = (+shp_features.features[thing].properties['population']);
-        }
-        if(max_scale<shp_features.features[thing].properties[selected_metric]*multiplier)
-            max_scale=shp_features.features[thing].properties[selected_metric]*multiplier;
-        array_metrics.push(shp_features.features[thing].properties[selected_metric]*multiplier);
+        if(max_scale<shp_features.features[thing].properties[selected_metric])
+            max_scale=shp_features.features[thing].properties[selected_metric];
+        array_metrics.push(shp_features.features[thing].properties[selected_metric]);
     }
     array_metrics.sort();
-let hashmap_metrics={};
+    let hashmap_metrics={};
     for(thing=array_metrics.length-1;thing>=0;thing--){
         let val=array_metrics[thing];
         hashmap_metrics[val]=thing;
@@ -414,20 +352,15 @@ let hashmap_metrics={};
     });
     console.log(shpSource);
     let intensities=['#FFF',
-    '#ADD8E6',
-'#1E90FF', '#0077BE',
-'#0B3D91']
+        '#ADD8E6',
+        '#1E90FF', '#0077BE',
+        '#0B3D91']
     let shpLayer = new ol.layer.Vector({
         source: shpSource,
         style: function(feature) {
-           // console.log(feature);
+            // console.log(feature);
             let color='gray';
-            let mul = 1;
             let value = feature.values_[selected_metric];
-            if (selected_metric === 'lowincfpct') {
-                mul = feature.values_['population'];
-            }
-            value=value*mul;
             if(hashmap_metrics[value]/array_metrics.length<=0.2)
                 color='rgba(0,0,255,0.2)';
             else if(hashmap_metrics[value]/array_metrics.length<=0.4)
@@ -436,8 +369,8 @@ let hashmap_metrics={};
                 color='rgba(0,0,255,0.6)';
             else if(hashmap_metrics[value]/array_metrics.length<=0.8)
                 color='rgba(0,0,255,0.8)';
-else if(hashmap_metrics[value]/array_metrics.length>0.8)
-    color='rgba(0,0,255,1)';
+            else if(hashmap_metrics[value]/array_metrics.length>0.8)
+                color='rgba(0,0,255,1)';
             return new ol.style.Style({
                 fill: new ol.style.Fill({
                     color: color
@@ -555,7 +488,7 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
     if(poi_features.length===0) {
         //console.log("aagaye yeh power rangersss");
         let thing=0;
-            for(thing=0;thing<data1.length;thing++){
+        for(thing=0;thing<data1.length;thing++){
             // pf.setStyle(
             //     new ol.style.Style({
             //     image: new ol.style.Circle({
@@ -564,28 +497,28 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
             //     })
             // })
             // )
-                if(metric==="visits")
-            hourwise_string=data1[thing]['visits_by_day'].substring(1,data1[thing]['visits_by_day'].length-1);
-                if(metric==="hours")
-                    hourwise_string=data1[thing]['popularity_by_hour'].substring(1,data1[thing]['popularity_by_hour'].length-1);
+            if(metric==="visits")
+                hourwise_string=data1[thing]['visits_by_day'].substring(1,data1[thing]['visits_by_day'].length-1);
+            if(metric==="hours")
+                hourwise_string=data1[thing]['popularity_by_hour'].substring(1,data1[thing]['popularity_by_hour'].length-1);
             const hourwise_array = hourwise_string.split(",");
-                let pf=new ol.Feature({
-                    geometry: new ol.geom.Point(ol.proj.fromLonLat([data1[thing]['longitude'], data1[thing]['latitude']])),
-                    name: data1[thing]['location_name_x'],
-                    category: data1[thing]['top_category'],
-                    city: ""+data1[thing]['city_x'],
-                    index:Math.floor(hashed_poi_indices[hourwise_array[hour]]*(rows)/(poi_array.length+1))
-                })
+            let pf=new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat([data1[thing]['longitude'], data1[thing]['latitude']])),
+                name: data1[thing]['location_name_x'],
+                category: data1[thing]['top_category'],
+                city: ""+data1[thing]['city_x'],
+                index:Math.floor(hashed_poi_indices[hourwise_array[hour]]*(rows)/(poi_array.length+1))
+            })
             pf.setStyle(
                 styles_arr[Math.floor(hashed_poi_indices[hourwise_array[hour]]*(rows)/(poi_array.length+1))]
             )
-                //code to be copied end
-                // try{features_arr[Math.floor(hashed_poi_indices[hourwise_array[hour]]*(rows)/(poi_array.length+1))].push(pf);}
-                // catch(err){
-                //     console.log(Math.floor(hashed_poi_indices[hourwise_array[hour]]*(rows)/(poi_array.length+1)));
-                // }
+            //code to be copied end
+            // try{features_arr[Math.floor(hashed_poi_indices[hourwise_array[hour]]*(rows)/(poi_array.length+1))].push(pf);}
+            // catch(err){
+            //     console.log(Math.floor(hashed_poi_indices[hourwise_array[hour]]*(rows)/(poi_array.length+1)));
+            // }
             poi_features.push(pf);
-            }
+        }
     }
     let poi_end = (new Date()).getTime();
     console.log("Time taken to add POI points to array was: "+(poi_end-poi_start)/1000+" seconds");
@@ -985,11 +918,11 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
         }
     });
     const layers=[shpLayer];
-        let osm=new ol.layer.Tile({
-            source: new ol.source.OSM()
-        });
-        osm.setOpacity(0.5);
-        layers.push(osm);
+    let osm=new ol.layer.Tile({
+        source: new ol.source.OSM()
+    });
+    osm.setOpacity(0.5);
+    layers.push(osm);
     // for(let i=0;i<rows;i++){
     //     layers.push(VectorLayerPoiGrouped[i]);
     // }
@@ -1022,7 +955,7 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
             vectorLayerE85)
     }
     const layerGroup= new ol.layer.Group({
-            layers:layers
+        layers:layers
     })
     // const map = new ol.Map({
     //     target: 'js-map',
@@ -1045,12 +978,12 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
         }
     })
     key_list = [];
-        Object.keys(selectedFuelTypes).forEach((keys, i) => {
-            if (selectedFuelTypes[keys]) {
-                linearChart(allData_count[keys], keys, current_showing_state_postal, colors[keys],svg_time_slider);
-                key_list.push(keys);
-            }
-        })
+    Object.keys(selectedFuelTypes).forEach((keys, i) => {
+        if (selectedFuelTypes[keys]) {
+            linearChart(allData_count[keys], keys, current_showing_state_postal, colors[keys],svg_time_slider);
+            key_list.push(keys);
+        }
+    })
     let feature_onClick;
     map.on('click', function(evt) {
         console.log(evt.pointerEvent.clientX);
@@ -1179,7 +1112,7 @@ function drawOpenLayersMap()  {
     })
     map.on('click',function (e){
         console.log(e);
-  })
+    })
     const features = [];
 
 }
@@ -1274,13 +1207,13 @@ function init() {
             current_showing_data_name = "USA";
             current_showing_state_postal = "USA";
             //drawMap();
-           // init_for_map();
-        let popup = document.getElementById("myPopup");
-        popup.classList.toggle("show");
+            // init_for_map();
+            let popup = document.getElementById("myPopup");
+            popup.classList.toggle("show");
             drawStations();
-        //     document.getElementById("main_title_h2").innerHTML = "Alternative Fuel Stations Construction in the U.S.";
-        // document.getElementById("construction_h3").innerHTML = "Yearly construction for the U.S.";
-        // document.getElementById("policy_h3").innerHTML = "New Policy for the U.S.";
+            //     document.getElementById("main_title_h2").innerHTML = "Alternative Fuel Stations Construction in the U.S.";
+            // document.getElementById("construction_h3").innerHTML = "Yearly construction for the U.S.";
+            // document.getElementById("policy_h3").innerHTML = "New Policy for the U.S.";
 
         }
     );
@@ -1297,11 +1230,11 @@ d3.json('data/DAC_UTAH_feb_14.geojson').then( (data) => {
 })
 
 d3.csv('data/full_csv.csv').then( (data) => {
-     loadPoi(data);
+    loadPoi(data);
 })
 
 d3.csv('data/Utah_city_stats.csv').then( (data) => {
-     loadCityData(data);
+    loadCityData(data);
 });
 
 d3.csv('data/cng_Utah.csv').then((data) => {
