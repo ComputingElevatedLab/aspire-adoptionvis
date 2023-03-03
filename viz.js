@@ -385,6 +385,7 @@ function drawStations() {
                 if($(this).is(':checked'))
                     selected_metric=$(this).val();
         })
+    selected_metric= document.getElementById("demo_metric").value;
     // for(i = 0; i < ele.length; i++) {
     //     console.log(ele[i]+"the element");
     //         if(ele[i].checked)
@@ -1052,6 +1053,9 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
             }
         })
     let feature_onClick;
+    map.on('moveend',function(evt){
+        set_maps();
+    });
     map.on('click', function(evt) {
         console.log(evt.pointerEvent.clientX);
         feature_onClick = map.forEachFeatureAtPixel(evt.pixel, function (feature, vectorLayerPoi) {

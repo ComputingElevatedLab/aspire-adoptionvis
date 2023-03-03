@@ -384,6 +384,7 @@ function drawStations() {
         if($(this).is(':checked'))
             selected_metric=$(this).val();
     })
+    selected_metric= document.getElementById("demo_metric").value;
     // for(i = 0; i < ele.length; i++) {
     //     console.log(ele[i]+"the element");
     //         if(ele[i].checked)

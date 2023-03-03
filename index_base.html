@@ -48,12 +48,12 @@
   <option value="visits">Visits (Day)</option>
 </select>
 <input type="submit" value="Submit" onclick="drawStations()">
-<br>
-<text>Selected Place Name:   </text>
-<text id="Place_id">N/A</text>
+<!--<br>-->
+<!--<text>Selected Place Name:   </text>-->
+<!--<text id="Place_id">N/A</text>-->
 <!--      <text>Metric Value:   </text>-->
 <!--      <text id="metric_value">N/A</text>-->
-<br/>
+<!--<br/>-->
 <div style="float:left">
   <label for="poi_hour">Time for Visualization:</label>
   <input type="range" id="poi_hour" name="poi_hour" min="1" max="24" onchange="drawStations();setText(this.value);">
@@ -84,43 +84,53 @@
 <div class="popup" id="popup">
   <span class="popuptext" id="myPopup">Popup text...</span>
 </div>
-<div style="float:right">
-  <h3>Metric to show</h3>
-  <input type="radio" id="population" name="metric" value="population" onclick="drawStations()">
-  <label id="population_label" class="checkbox-label-metric" for="cng">Population</label>
-  <!--        <br>-->
-  <!--          <input type="radio" id="race" name="metric" value="race">-->
-  <!--          <label id="race_label" class="checkbox-label-metric" for="lng">Race</label>-->
-  <br>
-  <input type="radio" id="age" name="metric" value="over64pct" onclick="drawStations()">
-  <label id="age_label" class="checkbox-label-metric" for="lpg">People Over 64</label>
-  <!--        <br>-->
-  <!--          <input type="radio" id="sex" name="metric" value="sex">-->
-  <!--          <label id="sex_label" class="checkbox-label-metric" for="e85">Sex</label>-->
-  <br>
-  <input type="radio" id="poverty" name="metric" value="lowincfpct" onclick="drawStations()">
-  <label id="poverty_label" class="checkbox-label-metric" for="bd">Poverty(Pvr)</label>
-  <br>
-  <input type="radio" id="pollution" name="metric" value="pm25" onclick="drawStations()">
-  <label id="pollution_label" class="checkbox-label-metric" for="bd">Pollution</label>
-  <br>
-  <input type="radio" id="cancer" name="metric" value="cancer" onclick="drawStations()">
-  <label id="cancer_label" class="checkbox-label-metric" for="elec">Cancer Risk(Crk)</label>
-  <br>
-  <input type="radio" id="food" name="metric" value="foodsrtpct" onclick="drawStations()">
-  <label id="food_label" class="checkbox-label-metric" for="hy">Food Desert(Fdt)</label>
-  <br>
-  <input type="radio" id="unemployment" name="metric" value="unemppct" onclick="drawStations()">
-  <label id="unemployment_label" class="checkbox-label-metric" for="hy">Unemployment Percentage(Upc)</label>
-  <br>
-  <input type="radio" id="homeless" name="metric" value="homelespct" onclick="drawStations()">
-  <label id="homeless_label" class="checkbox-label-metric" for="hy">Homeless Percentage(Hlp)</label>
-  <br>
-  <input type="radio" id="housing" name="metric" value="housebrdn" onclick="drawStations()">
-  <label id="housing_label" class="checkbox-label-metric" for="hy">Housing Cost(Hoc)</label>
-  <br>
+<div style="float: right">
+<!--  <input type="radio" id="population" name="metric" value="population" onclick="drawStations()">-->
+<!--  <label id="population_label" class="checkbox-label-metric" for="cng">Population</label>-->
+<!--  &lt;!&ndash;        <br>&ndash;&gt;-->
+<!--  &lt;!&ndash;          <input type="radio" id="race" name="metric" value="race">&ndash;&gt;-->
+<!--  &lt;!&ndash;          <label id="race_label" class="checkbox-label-metric" for="lng">Race</label>&ndash;&gt;-->
+<!--  <br>-->
+<!--  <input type="radio" id="age" name="metric" value="over64pct" onclick="drawStations()">-->
+<!--  <label id="age_label" class="checkbox-label-metric" for="lpg">People Over 64</label>-->
+<!--  &lt;!&ndash;        <br>&ndash;&gt;-->
+<!--  &lt;!&ndash;          <input type="radio" id="sex" name="metric" value="sex">&ndash;&gt;-->
+<!--  &lt;!&ndash;          <label id="sex_label" class="checkbox-label-metric" for="e85">Sex</label>&ndash;&gt;-->
+<!--  <br>-->
+<!--  <input type="radio" id="poverty" name="metric" value="lowincfpct" onclick="drawStations()">-->
+<!--  <label id="poverty_label" class="checkbox-label-metric" for="bd">Poverty(Pvr)</label>-->
+<!--  <br>-->
+<!--  <input type="radio" id="pollution" name="metric" value="pm25" onclick="drawStations()">-->
+<!--  <label id="pollution_label" class="checkbox-label-metric" for="bd">Pollution</label>-->
+<!--  <br>-->
+<!--  <input type="radio" id="cancer" name="metric" value="cancer" onclick="drawStations()">-->
+<!--  <label id="cancer_label" class="checkbox-label-metric" for="elec">Cancer Risk(Crk)</label>-->
+<!--  <br>-->
+<!--  <input type="radio" id="food" name="metric" value="foodsrtpct" onclick="drawStations()">-->
+<!--  <label id="food_label" class="checkbox-label-metric" for="hy">Food Desert(Fdt)</label>-->
+<!--  <br>-->
+<!--  <input type="radio" id="unemployment" name="metric" value="unemppct" onclick="drawStations()">-->
+<!--  <label id="unemployment_label" class="checkbox-label-metric" for="hy">Unemployment Percentage(Upc)</label>-->
+<!--  <br>-->
+<!--  <input type="radio" id="homeless" name="metric" value="homelespct" onclick="drawStations()">-->
+<!--  <label id="homeless_label" class="checkbox-label-metric" for="hy">Homeless Percentage(Hlp)</label>-->
+<!--  <br>-->
+<!--  <input type="radio" id="housing" name="metric" value="housebrdn" onclick="drawStations()">-->
+<!--  <label id="housing_label" class="checkbox-label-metric" for="hy">Housing Cost(Hoc)</label>-->
+<!--  <br>-->
+  <select name="demo_metric" onchange="drawStations()" id="demo_metric">
+    <option value="population" >Population</option>
+    <option value="pm25">Pollution</option>
+    <option value="over64pct">Age(Population percentage Over 64)</option>
+    <option value="lowincfpct">Poverty</option>
+    <option value="cancer">Cancer Risk</option>
+    <option value="foodsrtpct">Food Desert Percentage</option>
+    <option value="unemppct">Unemployment Percentage</option>
+    <option value="homelespct">Homeless Percentage</option>
+    <option value="housebrdn">Housing Cost</option>
+  </select>
 </div>
-<div id="js-map" class="map" style="width: 400px;height: 400px">
+<div id="js-map" class="map" style="height: 350px">
 </div>
 </div>
 <div class="overlay-container">
