@@ -1042,6 +1042,8 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
                         src: 'data/level3.png',
                         scale: 0.3
                     }),
+
+                
                 text: new ol.style.Text({
                     text: size.toString(),
                     fill: new ol.style.Fill({
