@@ -1,4 +1,5 @@
 // window.onload=drawOpenLayersMap;
+// document.body.style.zoom = "50%";
 let width = document.body.clientWidth * 0.64;
 let height = 500;
 let file_location = 'data/stations.csv';
@@ -75,6 +76,7 @@ let path = d3.geoPath()
 
 let allData = {};
 let poiData={};
+let charge={};
 let tilesData={};
 let cityData={};
 let dataLoaded = 0;
@@ -95,13 +97,14 @@ let key_list = [];
 let visibleRange = [1994, 2022];
 let visibleStations = [];
 
+// change elec to false to make it working like before
 let selectedFuelTypes = {
     'cng': false,
     'lng': false,
     'lpg': false,
     'e85': false,
     'bd': false,
-    'elec': false,
+    'elec': true,
     'hy': false,
 };
 
@@ -136,6 +139,11 @@ function loadTiles(data){
 function loadPoi(data){
     poiData['poi'] = data;
     console.log(poiData['poi'].length+"kuch aaya ki nahiiiii??");
+}
+
+function loadCharge(data){
+    charge['charge']=data;
+    console.log(charge['charge'].length);
 }
 
 function loadCityData(data) {
@@ -337,11 +345,12 @@ function drawStations() {
 
     let data = [];
     let data1=poiData['poi'];
+    let charge_data=charge['charge'];
     let data2=cityData['city'];
     let data2Dict ={};
-    data2.forEach(function(d){
-        data2Dict[d.city] = d;
-    });
+    charge_data.forEach(function(d){
+        data2Dict[d['ID']]=d['Battery Level'];
+    })
     let tile_data=tilesData['tile'];
     for (let year = startYear; year <= endYear; ++year) {
         if (selectedFuelTypes['cng'])
@@ -372,7 +381,7 @@ function drawStations() {
         })
     }
     let shp_start = (new Date()).getTime();
-    console.table(data)
+    // console.table(data)
     let shp_features=tile_data;
     let min_scale=0;
     let max_scale=0;
@@ -642,10 +651,18 @@ function drawStations() {
                 }))
             }
             if(d.color==="#8c564b") {
+                let ch=0;
+                try{
+                    ch=data2Dict[+d['ID']];
+                }
+                catch{
+                    ch=0;
+                }
                 elec_features.push(new ol.Feature({
                     geometry: new ol.geom.Point(ol.proj.fromLonLat([d.Longitude, d.Latitude])),
                     name:d['Station Name'],
                     city: d['City'],
+                    charge:ch,
                     size: 10
                 }))
             }
@@ -967,14 +984,62 @@ function drawStations() {
             //         fill: new ol.style.Fill({color: '#FFF'})
             //     })
             // })
+            let charge_arr=feature.values_.features;
+            let charge_value=0;
+            let num=0;
+            charge_arr.forEach(function(d){
+                num=+(d.values_.charge);
+                charge_value=charge_value+num;
+            })
+            console.log(charge_value+"value");
+            charge_value=charge_value/charge_arr.length;
+            if(charge_value<=25){
+                return new ol.style.Style({
+                    image: new ol.style.Icon({
+                        src: 'level0.png',
+                        scale: 0.3
+                    }),
+                    text: new ol.style.Text({
+                        text: size.toString(),
+                        fill: new ol.style.Fill({
+                            color: '#000'
+                        })
+                    })
+                });
+            }
+            if(charge_value<=50){
+                return new ol.style.Style({
+                    image: new ol.style.Icon({
+                        src: 'level1.png',
+                        scale: 0.3
+                    }),
+                    text: new ol.style.Text({
+                        text: size.toString(),
+                        fill: new ol.style.Fill({
+                            color: '#000'
+                        })
+                    })
+                });
+            }
+            if(charge_value<=75){
+                return new ol.style.Style({
+                    image: new ol.style.Icon({
+                        src: 'level2.png',
+                        scale: 0.3
+                    }),
+                    text: new ol.style.Text({
+                        text: size.toString(),
+                        fill: new ol.style.Fill({
+                            color: '#000'
+                        })
+                    })
+                });
+            }
             return new ol.style.Style({
-                image: new ol.style.RegularShape({
-                    radius: 7,
-                    points:4,
-                    angle: Math.PI / 4,
-                    stroke:new ol.style.Stroke({color: '#000'}),
-                    fill: new ol.style.Fill({color: '#8c564b'})
-                }),
+                    image: new ol.style.Icon({
+                        src: 'level3.png',
+                        scale: 0.3
+                    }),
                 text: new ol.style.Text({
                     text: size.toString(),
                     fill: new ol.style.Fill({
@@ -1056,7 +1121,7 @@ function drawStations() {
         console.log(evt.pointerEvent.clientX);
         feature_onClick = map.forEachFeatureAtPixel(evt.pixel, function (feature, vectorLayerPoi) {
             console.log(map.getView().getCenter());
-            console.log(feature.values_.features[0].values_.name);
+            // console.log(feature.values_.features[0].values_.name);
             myExtent = map.getView().calculateExtent(map.getSize());
             zoom=map.getView().getZoom();
             center=map.getView().getCenter();
@@ -1298,6 +1363,10 @@ d3.json('data/DAC_UTAH_feb_14.geojson').then( (data) => {
 
 d3.csv('data/full_csv.csv').then( (data) => {
     loadPoi(data);
+})
+
+d3.csv('data/elec-batteries.csv').then( (data) => {
+    loadCharge(data);
 })
 
 d3.csv('data/Utah_city_stats.csv').then( (data) => {

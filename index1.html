@@ -5,6 +5,7 @@
 <head>
   <title id="main_title">Alternative Fuel Stations in the U.S.</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel=”stylesheet” href=”https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css”rel=”nofollow” integrity=”sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm” crossorigin=”anonymous”>
   <link rel="stylesheet" href="v6.1.1-dist/ol.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,12 +43,23 @@
 <!--      <div id="law_linear_graph"></div>-->
 <!--      <br/>-->
 <!--      <h1>With OpenLayers</h1>-->
-<label for="vis_metric">Choose a Visualization Metric:</label>
-<select name="vis_metric" id="vis_metric">
+<label for="vis_metric">POI Metric:</label>
+<select name="vis_metric" id="vis_metric" onchange="drawStations()" class="select">
   <option value="hours">Popularity (Hours)</option>
   <option value="visits">Visits (Day)</option>
 </select>
-<input type="submit" value="Submit" onclick="drawStations()">
+<select name="demo_metric" onchange="drawStations()" id="demo_metric" class="select">
+  <option value="population" >Population</option>
+  <option value="pm25">Pollution</option>
+  <option value="over64pct">Age(Population percentage Over 64)</option>
+  <option value="lowincfpct">Poverty</option>
+  <option value="cancer">Cancer Risk</option>
+  <option value="foodsrtpct">Food Desert Percentage</option>
+  <option value="unemppct">Unemployment Percentage</option>
+  <option value="homelespct">Homeless Percentage</option>
+  <option value="housebrdn">Housing Cost</option>
+</select>
+<!--<input type="submit" value="Submit" onclick="drawStations()">-->
 <!--<br>-->
 <!--<text>Selected Place Name:   </text>-->
 <!--<text id="Place_id">N/A</text>-->
@@ -55,7 +67,7 @@
 <!--      <text id="metric_value">N/A</text>-->
 <!--<br/>-->
 <div style="float:left">
-  <label for="poi_hour">Time for Visualization:</label>
+  <label for="poi_hour">Time:</label>
   <input type="range" id="poi_hour" name="poi_hour" min="1" max="24" onchange="drawStations();setText(this.value);">
   <text id="hour_vis">10:00</text>
 </div>
@@ -63,7 +75,7 @@
 <br/>
 <br/>
 <div style="float:left">
-  <div class="center">
+  <div class="center" style="visibility: hidden">
     <input type="checkbox" class ="fuel_type" id="cng" name="cng" value="cng">
     <label id="cng_label" class="checkbox-label" for="cng">CNG</label>
     <input type="checkbox" class ="fuel_type" id="lng" name="lng" value="lng">
@@ -118,17 +130,6 @@
 <!--  <input type="radio" id="housing" name="metric" value="housebrdn" onclick="drawStations()">-->
 <!--  <label id="housing_label" class="checkbox-label-metric" for="hy">Housing Cost(Hoc)</label>-->
 <!--  <br>-->
-  <select name="demo_metric" onchange="drawStations()" id="demo_metric">
-    <option value="population" >Population</option>
-    <option value="pm25">Pollution</option>
-    <option value="over64pct">Age(Population percentage Over 64)</option>
-    <option value="lowincfpct">Poverty</option>
-    <option value="cancer">Cancer Risk</option>
-    <option value="foodsrtpct">Food Desert Percentage</option>
-    <option value="unemppct">Unemployment Percentage</option>
-    <option value="homelespct">Homeless Percentage</option>
-    <option value="housebrdn">Housing Cost</option>
-  </select>
 </div>
 <div id="js-map" class="map" style="height: 350px">
 </div>
