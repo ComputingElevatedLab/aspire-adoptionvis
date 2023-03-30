@@ -998,7 +998,7 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
             if(charge_value<=25){
                 return new ol.style.Style({
                     image: new ol.style.Icon({
-                        src: 'data/level0.png',
+                        src: 'https://drive.google.com/uc?id=1hu-ynDn9Ga2YHL-CsZjFBSHBTnedAzyo',
                         scale: 0.3
                     }),
                     text: new ol.style.Text({
@@ -1012,7 +1012,7 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
             if(charge_value<=50){
                 return new ol.style.Style({
                     image: new ol.style.Icon({
-                        src: 'data/level1.png',
+                        src: 'https://drive.google.com/uc?id=1gVAz0AR83U4FVlCECuhCkniUQsN11kwE',
                         scale: 0.3
                     }),
                     text: new ol.style.Text({
@@ -1026,7 +1026,7 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
             if(charge_value<=75){
                 return new ol.style.Style({
                     image: new ol.style.Icon({
-                        src: 'data/level2.png',
+                        src: 'https://drive.google.com/uc?id=1pr4wDy7IV04PR_CurkNJf183sAXqo5l9',
                         scale: 0.3
                     }),
                     text: new ol.style.Text({
@@ -1039,7 +1039,7 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
             }
             return new ol.style.Style({
                     image: new ol.style.Icon({
-                        src: 'data/level3.png',
+                        src: 'https://drive.google.com/uc?id=1u2jrLuhdu7gqSnUcBiyBe9zdSNY-OotF',
                         scale: 0.3
                     }),
 
