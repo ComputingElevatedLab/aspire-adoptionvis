@@ -6,14 +6,14 @@ let file_location = 'data/stations.csv';
 let svg_map = d3.select('#stations-over-time-viz').append('svg')
     .attr('width', 0)
     .attr('height', 0);
-
+var elec_features = [];
 let myExtent = [
     -12553481.8104441,
     4866886.776642518,
     -12322948.771123363,
     5097419.815963253
 ];
-
+var station_coordinates;
 function divideArray(array, numOfPartitions) {
     const frequencyMap = {};
     const partitions = [];
@@ -212,6 +212,36 @@ function loadData_law(data){
 
 }
 
+function addStation(){
+    let st_name=document.getElementById('station_input').value;
+    let charge_val=document.getElementById('charge_input').value;
+    let lat=document.getElementById('lat_input').value;
+    let lon=document.getElementById('lon_input').value;
+    charge_val=+charge_val;
+    lat=+lat;
+    lon=+lon;
+    let isChecked=document.getElementById('station_on_click').checked;
+    if(!isChecked) {
+        elec_features.push(new ol.Feature({
+            geometry: new ol.geom.Point(ol.proj.fromLonLat([lon, lat])),
+            name: st_name,
+            city: "sample city",
+            charge: charge_val,
+            size: 10
+        }));
+    }
+    else{
+        elec_features.push(new ol.Feature({
+            geometry: new ol.geom.Point(station_coordinates),
+            name: st_name,
+            city: "sample city",
+            charge: charge_val,
+            size: 10
+        }));
+    }
+    drawStations();
+}
+
 function init() {
     let data = [];
     let data1=[];
@@ -299,6 +329,12 @@ function drawStations() {
     window.onkeydown = function(event) {
         if (event.keyCode === 72) {
             popup.classList.toggle("show");
+        }
+    }
+    let popup_addS = document.getElementById("popup_barchart");
+    window.onkeydown = function(event) {
+        if (event.keyCode === 65) {
+            popup_addS.classList.toggle("show");
         }
     }
     let milliseconds_start = (new Date()).getTime();
@@ -475,7 +511,6 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
     const poi_features=[];
     let poi_array=[];
     const lpg_features = [];
-    const elec_features = [];
     const hy_features = [];
     const bd_features = [];
     const e85_features = [];
@@ -1125,6 +1160,7 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
     });
     map.on('click', function(evt) {
         console.log(evt.pointerEvent.clientX);
+        station_coordinates=evt.coordinate;
         feature_onClick = map.forEachFeatureAtPixel(evt.pixel, function (feature, vectorLayerPoi) {
             console.log(map.getView().getCenter());
             console.log(feature.values_.features[0].values_.name);
@@ -1215,7 +1251,10 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
             //                 to_be_added=to_be_added+"\nHousing Burden: "+data2Dict[feature.values_.city][$(this).val()]+"\n";
             //         }
             //     }
-            // })
+            // }),
+            let popup_addS = document.getElementById("popup_barchart");
+            popup_addS.style.left=evt.pointerEvent.clientX-10+'px';
+            popup_addS.style.top=evt.pointerEvent.clientY+120+'px';
             popup.innerHTML="Place Name: "+feature.values_.features[0].values_.name;
             mainPopup.style.left=evt.pointerEvent.clientX-10+'px';
             mainPopup.style.top=evt.pointerEvent.clientY+120+'px';

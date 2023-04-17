@@ -1,6 +1,7 @@
 <!-- DOCTYPE html -->
 <!DOCTYPE html>
 <meta http-equiv="Permissions-Policy" content="interest-cohort=()">
+<meta charset="utf-8">
 <html lang="en">
 
 <head>
@@ -133,6 +134,20 @@
 <!--  <br>-->
 </div>
 <div id="js-map" class="map" style="height: 350px">
+</div>
+<div class="popup" id="popup_barchart" style="background: white;border: 2px solid black">
+    <input type="text" id="station_input" name="station" placeholder="Enter The Station name">
+    <br>
+    <input type="text" id="charge_input" name="charge" placeholder="Enter The Charge/Availability">
+    <br>
+    <input type="text" id="lat_input" name="latitude" placeholder="Enter The Latitude">
+    <br>
+    <input type="text" id="lon_input" name="latitude" placeholder="Enter The Longitude">
+    <br>
+    <input type="checkbox" id="station_on_click" value='YES'>
+    <label id="station_OC" class="checkbox-metric" >Get coordinates from last click?</label>
+    <br>
+    <input style="position: absolute; left: 50%" type="submit" value="Add Station" onclick="addStation()">
 </div>
 </div>
 <div class="overlay-container">
