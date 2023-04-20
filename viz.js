@@ -1,12 +1,13 @@
 // window.onload=drawOpenLayersMap;
-// document.body.style.zoom = "50%";
 let width = document.body.clientWidth * 0.64;
 let height = 500;
 let file_location = 'data/stations.csv';
 let svg_map = d3.select('#stations-over-time-viz').append('svg')
-    .attr('width', 0)
-    .attr('height', 0);
-var elec_features = [];
+    .attr('width', width)
+    .attr('height', height);
+let metrics_selected=[];
+let metrics_hashmap=[];
+let metrics_array=[];
 let myExtent = [
     -12553481.8104441,
     4866886.776642518,
@@ -14,6 +15,8 @@ let myExtent = [
     5097419.815963253
 ];
 var station_coordinates;
+var elec_features = [];
+var station_features=[];
 function divideArray(array, numOfPartitions) {
     const frequencyMap = {};
     const partitions = [];
@@ -57,7 +60,7 @@ function divideArray(array, numOfPartitions) {
 }
 
 let center=ol.proj.fromLonLat([-111.0937, 39.3210]);
-let zoom=6;
+let zoom=7.7;
 
 const map = new ol.Map({
     target: 'js-map',
@@ -75,8 +78,9 @@ let path = d3.geoPath()
     .projection(projection);
 
 let allData = {};
-let charge={};
 let poiData={};
+let newStations={};
+let charge={};
 let tilesData={};
 let cityData={};
 let dataLoaded = 0;
@@ -96,7 +100,7 @@ let key_list = [];
 
 let visibleRange = [1994, 2022];
 let visibleStations = [];
-//change elec value to false and make the checkboxes visible to get normal functionality
+
 let selectedFuelTypes = {
     'cng': false,
     'lng': false,
@@ -137,7 +141,7 @@ function loadTiles(data){
 
 function loadPoi(data){
     poiData['poi'] = data;
-    console.log(poiData['poi'].length+"kuch aaya ki nahiiiii??");
+    console.log(poiData['poi'].length);
 }
 
 function loadCharge(data){
@@ -148,7 +152,12 @@ function loadCharge(data){
 function loadCityData(data) {
     cityData['city'] = data;
     console.log("citydata loaded");
+    console.table(cityData);
 }
+
+d3.csv('data/elec-batteries.csv').then( (data) => {
+    loadCharge(data);
+})
 
 function loadData(data, name) {
     data = data.filter((item) => {
@@ -212,36 +221,6 @@ function loadData_law(data){
 
 }
 
-function addStation(){
-    let st_name=document.getElementById('station_input').value;
-    let charge_val=document.getElementById('charge_input').value;
-    let lat=document.getElementById('lat_input').value;
-    let lon=document.getElementById('lon_input').value;
-    charge_val=+charge_val;
-    lat=+lat;
-    lon=+lon;
-    let isChecked=document.getElementById('station_on_click').checked;
-    if(!isChecked) {
-        elec_features.push(new ol.Feature({
-            geometry: new ol.geom.Point(ol.proj.fromLonLat([lon, lat])),
-            name: st_name,
-            city: "sample city",
-            charge: charge_val,
-            size: 10
-        }));
-    }
-    else{
-        elec_features.push(new ol.Feature({
-            geometry: new ol.geom.Point(station_coordinates),
-            name: st_name,
-            city: "sample city",
-            charge: charge_val,
-            size: 10
-        }));
-    }
-    drawStations();
-}
-
 function init() {
     let data = [];
     let data1=[];
@@ -277,6 +256,115 @@ function init() {
         .style('opacity', 0.0);
 }
 
+function showChargers(){
+    if(station_features.length===0) {
+        let url = 'http://144.39.204.242:11236/charger';
+        fetch(url)
+            .then((response) => {
+                return response.json();
+            })
+            .then((data) => {
+                let arr = data.data;
+                for (let i = 0; i < arr.length; i++) {
+                    let url1="http://144.39.204.242:11236/charger/"+arr[i]['id']+"/status?recent=true";
+                    fetch(url1)
+                        .then((res) => {
+                            return res.json();
+                        }).then(dat=>{
+                            let dic=dat.data;
+                            let ch=dic['status'];
+                        station_features.push(new ol.Feature({
+                            geometry: new ol.geom.Point(ol.proj.fromLonLat([+arr[i]['longitude'], +arr[i]['latitude']])),
+                            name: arr[i]['chargerName'],
+                            city: "sample city",
+                            charge: ch,
+                            size: 10
+                        }));
+                    })
+                }
+                console.log(station_features);
+                sleep(1000).then(() => {
+                    console.log(station_features);
+                    drawStations();
+                });
+            })
+    }
+}
+function toggleElec(){
+    if(selectedFuelTypes['elec'])
+    selectedFuelTypes['elec']=false;
+    else
+        selectedFuelTypes['elec']=true;
+    drawStations();
+}
+function addStation(){
+    let st_name=document.getElementById('station_input').value;
+    let charge_val=document.getElementById('charge_input').value;
+    let lat=document.getElementById('lat_input').value;
+    let lon=document.getElementById('lon_input').value;
+    charge_val=+charge_val;
+    lat=+lat;
+    lon=+lon;
+    let arr=[st_name,charge_val,lat,lon];
+    newStations[{'st_name':st_name,'charge_val':charge_val,'lat':lat,'lon':lon}];
+    let isChecked=document.getElementById('station_on_click').checked;
+    if(!isChecked) {
+        elec_features.push(new ol.Feature({
+            geometry: new ol.geom.Point(ol.proj.fromLonLat([lon, lat])),
+            name: st_name,
+            city: "sample city",
+            charge: charge_val,
+            size: 10
+        }));
+    }
+    else{
+        elec_features.push(new ol.Feature({
+            geometry: new ol.geom.Point(station_coordinates),
+            name: st_name,
+            city: "sample city",
+            charge: charge_val,
+            size: 10
+        }));
+    }
+    console.log(newStations);
+    drawStations();
+}
+
+function drawBarChart(bars,metrics_selected,cityName) {
+    let c_palette=['255, 0, 0','0, 255, 0','0, 0, 255','255, 255, 0', '255, 0, 255','0, 255, 255','128, 0, 128','255, 165, 0','0, 128, 128'];
+    let canvas = document.getElementById('barChart');
+    canvas.style.width="150px";
+    canvas.style.height="75px";
+    canvas.style.background="#FFF";
+    const context = canvas.getContext('2d');
+    context.clearRect(0, 0, 150, 75);
+    context.beginPath();
+    context.closePath();
+    context.clearRect(0, 0, 150, 75);
+    context.fillStyle = "#FFF";
+    const barWidth = canvas.width / bars.length;
+    context.fillRect(0, 0 , 150,75);
+    for (let i = 0; i < bars.length; i++) {
+        context.fillStyle = 'rgb('+c_palette[i]+')';
+        context.fillRect(i * barWidth, canvas.height - (bars[i] * 50), barWidth, bars[i] * 50);
+        const labelX = i * barWidth + barWidth / 2;
+        const labelY = 50;
+        let textSize=canvas.width/(bars.length*5.5)
+        context.fillStyle = '#000';
+        context.font =textSize.toString()+'px solid helvetica';
+        context.textAlign = 'center';
+        // let percentage=Math.floor(bars[i]*100);.
+        // context.fillText(metrics_selected[i], labelX, labelY);
+        // context.fillText(percentage.toString(), labelX, 70);
+    }
+    context.clearRect(0, 0, 150, 75);
+    context.beginPath();
+    context.closePath();
+    context.clearRect(0, 0, 150, 75);
+    // context.fillText(cityName.toString(), 150, 20);
+}
+
+
 function setText(text) {
     if (document.getElementById("vis_metric").value === "hours")
     {
@@ -293,50 +381,11 @@ function hideLoader(){
     document.getElementById("loader").style.visibility='hidden';
 }
 
-function set_maps(){
-    url=document.documentURI;
-    console.log(url.slice(-15));
-    if(url.slice(-15)==="index_base.html") {
-        console.log("Iframe base??");
-        myExtent = map.getView().calculateExtent(map.getSize());
-        zoom=map.getView().getZoom();
-        center=map.getView().getCenter();
-        let iframe_1 = parent.document.getElementById('iframe1');
-        iframe_1.contentWindow.postMessage(map.getView().calculateExtent(map.getSize())+","+map.getView().getZoom()+","+map.getView().getCenter(), '*');
-        let iframe_2 = parent.document.getElementById('iframe2');
-        iframe_2.contentWindow.postMessage(map.getView().calculateExtent(map.getSize())+","+map.getView().getZoom()+","+map.getView().getCenter(), '*');
-        let iframe_3 = parent.document.getElementById('iframe3');
-        iframe_3.contentWindow.postMessage(map.getView().calculateExtent(map.getSize())+","+map.getView().getZoom()+","+map.getView().getCenter(), '*');
-    }
-}
-
 function drawStations() {
-    url=document.documentURI;
-    console.log(url.slice(-15));
-    if(url.slice(-15)==="index_base.html") {
-        console.log("Iframe base??");
-        myExtent = map.getView().calculateExtent(map.getSize());
-        zoom=map.getView().getZoom();
-        center=map.getView().getCenter();
-        let iframe_1 = parent.document.getElementById('iframe1');
-        iframe_1.contentWindow.postMessage(map.getView().calculateExtent(map.getSize())+","+map.getView().getZoom()+","+map.getView().getCenter(), '*');
-        let iframe_2 = parent.document.getElementById('iframe2');
-        iframe_2.contentWindow.postMessage(map.getView().calculateExtent(map.getSize())+","+map.getView().getZoom()+","+map.getView().getCenter(), '*');
-        let iframe_3 = parent.document.getElementById('iframe3');
-        iframe_3.contentWindow.postMessage(map.getView().calculateExtent(map.getSize())+","+map.getView().getZoom()+","+map.getView().getCenter(), '*');
-    }
-    let popup = document.getElementById("myPopup");
-    window.onkeydown = function(event) {
-        if (event.keyCode === 72) {
-            popup.classList.toggle("show");
-        }
-    }
-    let popup_addS = document.getElementById("popup_barchart");
-    window.onkeydown = function(event) {
-        if (event.keyCode === 65) {
-            popup_addS.classList.toggle("show");
-        }
-    }
+    console.log(elec_features);
+    console.log(newStations);
+    $('div.ol-zoom-out').text('-');
+    console.log(myExtent);
     let milliseconds_start = (new Date()).getTime();
     // document.getElementById("loader").style.visibility='visible';
     let hour=10;
@@ -361,6 +410,12 @@ function drawStations() {
         hour=hour-1;
         document.getElementById("hour_vis").innerHTML =  hour+1;
     }
+    let charge_data=charge['charge'];
+    let data2Dict ={};
+    charge_data.forEach(function(d){
+        data2Dict[d['ID']]=d['Battery Level'];
+    })
+
     // const elements = document.getElementsByClassName("map");
     // while(elements.length > 0){
     //     elements[0].parentNode.removeChild(elements[0]);
@@ -377,16 +432,10 @@ function drawStations() {
     if (endYear > 2022)
         endYear = 2022;
 
-    d3.select('#year-label').text(startYear + ' - ' + endYear);
+    // d3.select('#year-label').text(startYear + ' - ' + endYear);
 
     let data = [];
     let data1=poiData['poi'];
-    let charge_data=charge['charge'];
-    let data2=cityData['city'];
-    let data2Dict ={};
-    charge_data.forEach(function(d){
-        data2Dict[d['ID']]=d['Battery Level'];
-    })
     let tile_data=tilesData['tile'];
     for (let year = startYear; year <= endYear; ++year) {
         if (selectedFuelTypes['cng'])
@@ -424,73 +473,227 @@ function drawStations() {
     console.log(shp_features.features);
     let array_metrics=[];
     let thing=0;
+    let geojson_features=[];
     let selected_metric='';
-    $('input:radio').each(function () {
+    let selected_metrics=[];
+    $('input:checkbox').each(function () {
+        if ($(this)[0].id === "population")
+        {
+            let metrica = document.getElementById("population"+"_label");
+            metrica.style.color="#000";
+            metrica.style.background="#FFF";
+            {
+                if($(this).is(':checked')) {
+                    selected_metrics.push($(this).val());
+                }
+            }
+        }
+        if ($(this)[0].id === "age")
+        {
+            let metrica = document.getElementById($(this).val()+"_label");
+            metrica.style.color="#000";
+            metrica.style.background="#FFF";
+            {
                 if($(this).is(':checked'))
-                    selected_metric=$(this).val();
-        })
-    selected_metric= document.getElementById("demo_metric").value;
+                    selected_metrics.push($(this).val());
+            }
+        }
+        if ($(this)[0].id === "poverty")
+        {
+            let metrica = document.getElementById($(this).val()+"_label");
+            metrica.style.color="#000";
+            metrica.style.background="#FFF";
+            {
+                if($(this).is(':checked'))
+                    selected_metrics.push($(this).val());
+            }
+        }
+        if ($(this)[0].id === "pollution")
+        {
+            let metrica = document.getElementById($(this).val()+"_label");
+            metrica.style.color="#000";
+            metrica.style.background="#FFF";
+            {
+                if($(this).is(':checked'))
+                    selected_metrics.push($(this).val());
+            }
+        }
+        if ($(this)[0].id === "cancer")
+        {
+            let metrica = document.getElementById($(this).val()+"_label");
+            metrica.style.color="#000";
+            metrica.style.background="#FFF";
+            {
+                if($(this).is(':checked'))
+                    selected_metrics.push($(this).val());
+            }
+        }
+        if ($(this)[0].id === "food")
+        {
+            let metrica = document.getElementById($(this).val()+"_label");
+            metrica.style.color="#000";
+            metrica.style.background="#FFF";
+            {
+                if($(this).is(':checked'))
+                    selected_metrics.push($(this).val());
+            }
+        }
+        if ($(this)[0].id === "unemployment")
+        {
+            let metrica = document.getElementById($(this).val()+"_label");
+            metrica.style.color="#000";
+            metrica.style.background="#FFF";
+            {
+                if($(this).is(':checked'))
+                    selected_metrics.push($(this).val());
+            }
+        }
+        if ($(this)[0].id === "homeless")
+        {
+            let metrica = document.getElementById($(this).val()+"_label");
+            metrica.style.color="#000";
+            metrica.style.background="#FFF";
+            {
+                if($(this).is(':checked'))
+                    selected_metrics.push($(this).val());
+
+            }
+        }
+        if ($(this)[0].id === "housing")
+        {
+            let metrica = document.getElementById($(this).val()+"_label");
+            metrica.style.color="#000";
+            metrica.style.background="#FFF";
+            {
+                if($(this).is(':checked'))
+                    selected_metrics.push($(this).val());
+            }
+        }
+    })
+    // console.log(selected_metrics);
     // for(i = 0; i < ele.length; i++) {
     //     console.log(ele[i]+"the element");
     //         if(ele[i].checked)
     //             selected_metric=ele[i].value;
     // }
-    console.log(selected_metric+"The selected metric");
-    for(thing=0;thing<shp_features.features.length;thing++){
+    let hashmap_metrics = [];
+    let c_palette=['255, 0, 0','0, 255, 0','0, 0, 255','255, 255, 0', '255, 0, 255','0, 255, 255','128, 0, 128','255, 165, 0','0, 128, 128'];
+    for(let ind=0;ind<selected_metrics.length;ind++){
+        array_metrics.push([]);
+        hashmap_metrics.push({});
+        let selected_metrica = document.getElementById(selected_metrics[ind]+"_label");
+        selected_metrica.style.color="#FFF";
+        selected_metrica.style.background='rgb(' + c_palette[ind]+')';
+    }
+    console.log(selected_metrics+"The selected metrics");
+    for(let ind=0;ind<selected_metrics.length;ind++) {
         let multiplier=1;
-        if (selected_metric === 'lowincfpct') {
-            console.log("check " + shp_features.features[thing].properties['population']);
-            multiplier = (+shp_features.features[thing].properties['population']);
-        }
-        if(max_scale<shp_features.features[thing].properties[selected_metric]*multiplier)
-            max_scale=shp_features.features[thing].properties[selected_metric]*multiplier;
-        array_metrics.push(shp_features.features[thing].properties[selected_metric]*multiplier);
-    }
-    array_metrics.sort();
-let hashmap_metrics={};
-    for(thing=array_metrics.length-1;thing>=0;thing--){
-        let val=array_metrics[thing];
-        hashmap_metrics[val]=thing;
-    }
+        for (thing = 0; thing < shp_features.features.length; thing++) {
+            console.log(shp_features.features[thing].geometry.coordinates[0][0][0],shp_features.features[thing].geometry.coordinates[0][0][1]);
+            console.log("feature!!");
+            if (selected_metrics[ind] === 'lowincfpct') {
+                console.log("check " + shp_features.features[thing].properties['population']);
+                multiplier = (+shp_features.features[thing].properties['population']);
+            }
+            // let arr=[population,over64pct,lowincfpct,pm25,cancer,foodsrtpct,unemppct,homelespct,housebrdn]
+            if (max_scale < shp_features.features[thing].properties[selected_metrics[ind]] * multiplier)
+                max_scale = shp_features.features[thing].properties[selected_metrics[ind]] * multiplier;
+            array_metrics[ind].push(shp_features.features[thing].properties[selected_metrics[ind]] * multiplier);
+            console.log(shp_features.features[thing].properties);
+            let minimum_lat=shp_features.features[thing].geometry.coordinates[0][shp_features.features[thing].geometry.coordinates[0].length-1][0];
+            let minimum_long=shp_features.features[thing].geometry.coordinates[0][shp_features.features[thing].geometry.coordinates[0].length-1][1];
+            let maximum_lat=minimum_lat;
+            let maximum_long=minimum_long;
+            let lat_sum=0;
+            let long_sum=0;
+            for(let indenter=0;indenter<shp_features.features[thing].geometry.coordinates[0].length;indenter++){
+                if(minimum_lat>shp_features.features[thing].geometry.coordinates[0][indenter][0]){
+                    minimum_lat=shp_features.features[thing].geometry.coordinates[0][indenter][0];
+                }
+                if(maximum_lat<shp_features.features[thing].geometry.coordinates[0][indenter][0]){
+                    maximum_lat=shp_features.features[thing].geometry.coordinates[0][indenter][0];
+                }
+                if(minimum_long>shp_features.features[thing].geometry.coordinates[0][indenter][1]){
+                    minimum_long=shp_features.features[thing].geometry.coordinates[0][indenter][1];
+                }
+                if(maximum_long<shp_features.features[thing].geometry.coordinates[0][indenter][1]){
+                    maximum_long=shp_features.features[thing].geometry.coordinates[0][indenter][1];
+                }
+                lat_sum=lat_sum+shp_features.features[thing].geometry.coordinates[0][indenter][0];
+                long_sum=long_sum+shp_features.features[thing].geometry.coordinates[0][indenter][1];
+            }
+            long_sum=long_sum/shp_features.features[thing].geometry.coordinates[0].length;
+            lat_sum=lat_sum/shp_features.features[thing].geometry.coordinates[0].length;
+            // let lat_coord=lat_sum;
+            // let long_coord=long_sum;
+            let lat_coord=(maximum_lat+minimum_lat)/2;
+            let long_coord=(maximum_long+minimum_long)/2;
 
+            geojson_features.push(new ol.Feature({
+                geometry: new ol.geom.Point([lat_coord,long_coord]),
+                size: 10,
+                population:shp_features.features[thing].properties.population,
+                over64pct:shp_features.features[thing].properties.over64pct,
+                lowincfpct:shp_features.features[thing].properties.lowincfpct,
+                pm25:shp_features.features[thing].properties.pm25,
+                cancer:shp_features.features[thing].properties.cancer,
+                foodsrtpct:shp_features.features[thing].properties.foodsrtpct,
+                unemppct:shp_features.features[thing].properties.unemppct,
+                homelespct:shp_features.features[thing].properties.homelespct,
+                housebrdn:shp_features.features[thing].properties.housebrdn,
+                value:shp_features.features[thing].properties[selected_metrics[ind]] * multiplier
+            }))
+        }
+        array_metrics[ind].sort();
+        for (thing = array_metrics[ind].length - 1; thing >= 0; thing--) {
+            let val = array_metrics[ind][thing];
+            hashmap_metrics[ind][val] = thing;
+        }
+    }
+    let geo_array=[];
+    metrics_hashmap=hashmap_metrics;
+    metrics_array=array_metrics;
+    metrics_selected=selected_metrics;
+    console.table(hashmap_metrics);
+    let intensities=['#FFF',
+    '#ADD8E6',
+'#1E90FF', '#0077BE',
+'#0B3D91']
+    let parts = [];
     let shpSource = new ol.source.Vector({
         url:'data/DAC_UTAH_feb_14.geojson',
         'projection': map.getView().getProjection(),
         format: new ol.format.GeoJSON()
     });
-    console.log(shpSource);
-    let intensities=['#FFF',
-    '#ADD8E6',
-'#1E90FF', '#0077BE',
-'#0B3D91']
     let shpLayer = new ol.layer.Vector({
         source: shpSource,
         style: function(feature) {
-           // console.log(feature);
-            let color='gray';
-            let mul = 1;
-            let value = feature.values_[selected_metric];
-            if (selected_metric === 'lowincfpct') {
-                mul = feature.values_['population'];
-            }
-            value=value*mul;
-            if(hashmap_metrics[value]/array_metrics.length<=0.2)
-                color='rgba(0,0,255,0.2)';
-            else if(hashmap_metrics[value]/array_metrics.length<=0.4)
-                color='rgba(0,0,255,0.4)';
-            else if(hashmap_metrics[value]/array_metrics.length<=0.6)
-                color='rgba(0,0,255,0.6)';
-            else if(hashmap_metrics[value]/array_metrics.length<=0.8)
-                color='rgba(0,0,255,0.8)';
-else if(hashmap_metrics[value]/array_metrics.length>0.8)
-    color='rgba(0,0,255,1)';
             return new ol.style.Style({
-                fill: new ol.style.Fill({
-                    color: color
+                stroke: new ol.style.Stroke({
+                    color: '#000',
+                    width: 2,
                 })
             });
         }
     });
+    let featureCollection = {
+        "type": "FeatureCollection",
+        "features": parts
+    };
+    // let vectorSource = new ol.source.Vector({
+    //     features: (new ol.format.GeoJSON()).readFeatures(featureCollection)
+    // });
+    // let vectorLayer = new ol.layer.Vector({
+    //     source: vectorSource,
+    //     style: function(feature) {
+    //         return new ol.style.Style({
+    //             fill: new ol.style.Fill({
+    //                 color: feature.get("color")
+    //             })
+    //         });
+    //     }
+    // });
+
     let shp_end = (new Date()).getTime();
     console.log("Time taken to add Shape Layer points to array was: "+(shp_end-shp_start)/1000+" seconds");
 
@@ -598,7 +801,7 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
     //     return 'circle';
     // })
     if(poi_features.length===0) {
-        //console.log("aagaye yeh power rangersss");
+        console.log("aagaye yeh power rangersss");
         let thing=0;
             for(thing=0;thing<data1.length;thing++){
             // pf.setStyle(
@@ -694,7 +897,7 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
                 catch{
                     ch=0;
                 }
-                console.log(d);
+                // console.log(ol.proj.fromLonLat([d.Longitude, d.Latitude]));
                 elec_features.push(new ol.Feature({
                     geometry: new ol.geom.Point(ol.proj.fromLonLat([d.Longitude, d.Latitude])),
                     name:d['Station Name'],
@@ -702,6 +905,7 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
                     charge: ch,
                     size: 10
                 }))
+                // console.log(d.Longitude,d.Latitude);
             }
             if(d.color==="#e377c2") {
                 hy_features.push(new ol.Feature({
@@ -730,7 +934,7 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
             return "all";
         })
         .style('fill', (d) => d.color)
-        .style('opacity', 0.4)
+        .style('opacity', 0.5)
         .on('mouseover', function (e, d) {
             if (current_showing_data_name !== "USA") {
                 mouse_overed_station = d;
@@ -743,7 +947,6 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
         })
     let Station_end = (new Date()).getTime();
     console.log("time for adding stations data to array was: "+(Station_end-Station_start)/1000+" seconds");
-
     // let VectorSourcePoiGrouped=[];
     // for (let i=0;i<rows;i++){
     //     const clusterSource = new ol.source.Cluster({
@@ -757,6 +960,17 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
     //        clusterSource
     //    )
     // }
+
+    console.log(newStations);
+    for(let elec_st=0;elec_st<newStations.length;elec_st++){
+        elec_features.push(new ol.Feature({
+            geometry: new ol.geom.Point(ol.proj.fromLonLat([newStations[elec_st][3], newStations[elec_st][2]])),
+            name:newStations[elec_st][0],
+            city: "sample city",
+            charge: newStations[elec_st][1],
+            size: 10
+        }))
+    }
     const vectorSourcePoi = new ol.source.Vector({
         features:poi_features
 
@@ -780,6 +994,9 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
     const vectorSourceBd = new ol.source.Vector({
         features:bd_features
     });
+    const vectorSourceStat=new ol.source.Vector({
+        features:station_features
+    });
     const vectorSourceElec = new ol.source.Vector({
         features:elec_features
     });
@@ -794,6 +1011,12 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
         distance:  10,
         minDistance: 10,
         source: vectorSourceElec,
+    });
+
+    const clusterSourceStat=new ol.source.Cluster({
+        distance:  10,
+        minDistance: 10,
+        source: vectorSourceStat,
     });
 
     const clusterSourceHy = new ol.source.Cluster({
@@ -1008,10 +1231,10 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
             });
         }
     });
-    const vectorLayerElec = new ol.layer.Vector({
-        source: clusterSourceElec,
+    const vectorLayerStat= new ol.layer.Vector({
+        source: clusterSourceStat,
         style: function(feature) {
-           // console.log(feature.values_.features[0].values_.charge);
+            console.log(feature.values_.features[0].values_.charge);
             const size = feature.get('features').length;
             // new ol.style.Style({
             //     image: new ol.style.RegularShape({
@@ -1022,18 +1245,102 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
             //         fill: new ol.style.Fill({color: '#FFF'})
             //     })
             // })
-            let charge_arr=feature.values_.features;
-            let charge_value=0;
-            let num=0;
-            charge_arr.forEach(function(d){
-                num=+(d.values_.charge);
-                charge_value=charge_value+num;
+            let charge_arr = feature.values_.features;
+            let charge_value = 0;
+            let num = 0;
+            charge_arr.forEach(function (d) {
+                num = +(d.values_.charge);
+                charge_value = charge_value + num;
             })
-            charge_value=charge_value/charge_arr.length;
-            if(charge_value<=25){
+            charge_value = charge_value / charge_arr.length;
+            if(feature.values_.features[0].values_.charge==='Available') {
                 return new ol.style.Style({
                     image: new ol.style.Icon({
-                        src: 'https://drive.google.com/uc?id=1hu-ynDn9Ga2YHL-CsZjFBSHBTnedAzyo',
+                        src: 'https://drive.google.com/uc?id=16obw9VRI0rxN1S30n9RtomZh2rlgWvJ5',
+                        scale: 0.7
+                    }),
+
+                    text: new ol.style.Text({
+                        text: size.toString(),
+                        fill: new ol.style.Fill({
+                            color: '#fff'
+                        })
+                    })
+                });
+            }
+            if(feature.values_.features[0].values_.charge==='Unavailable') {
+                return new ol.style.Style({
+                    image: new ol.style.Icon({
+                        src: 'https://drive.google.com/uc?id=1uNCoNzlYKnnGoMDd5Bx_DC8t3b3b3sG0',
+                        scale: 0.7
+                    }),
+
+                    text: new ol.style.Text({
+                        text: size.toString(),
+                        fill: new ol.style.Fill({
+                            color: '#fff'
+                        })
+                    })
+                });
+            }
+            if(feature.values_.features[0].values_.charge==='Charging') {
+                return new ol.style.Style({
+                    image: new ol.style.Icon({
+                        src: 'https://drive.google.com/uc?id=121O9wzTRfvr5PiuJWACxMZhIQHJ3OfuF',
+                        scale: 0.7
+                    }),
+
+                    text: new ol.style.Text({
+                        text: size.toString(),
+                        fill: new ol.style.Fill({
+                            color: '#fff'
+                        })
+                    })
+                });
+            }
+            if(feature.values_.features[0].values_.charge==='Preparing') {
+                return new ol.style.Style({
+                    image: new ol.style.Icon({
+                        src: 'https://drive.google.com/uc?id=1mgsyQ-ahKI59XCNw8hQr-rXNHqGE7eyK',
+                        scale: 0.7
+                    }),
+
+                    text: new ol.style.Text({
+                        text: size.toString(),
+                        fill: new ol.style.Fill({
+                            color: '#fff'
+                        })
+                    })
+                });
+            }
+        }
+    });
+    const vectorLayerElec = new ol.layer.Vector({
+        source: clusterSourceElec,
+        style: function(feature) {
+            // console.log(feature.values_.features[0].values_.charge);
+            const size = feature.get('features').length;
+            // new ol.style.Style({
+            //     image: new ol.style.RegularShape({
+            //         radius: Math.pow(maximum_visits/(rows-i),0.4),
+            //         points:4,
+            //         angle: 90,
+            //         stroke:new ol.style.Stroke({color: '#000'}),
+            //         fill: new ol.style.Fill({color: '#FFF'})
+            //     })
+            // })
+            let charge_arr = feature.values_.features;
+            let charge_value = 0;
+            let num = 0;
+            charge_arr.forEach(function (d) {
+                num = +(d.values_.charge);
+                charge_value = charge_value + num;
+            })
+            charge_value = charge_value / charge_arr.length;
+            if (charge_value <= 25) {
+                return new ol.style.Style({
+                    image: new ol.style.Icon({
+                        src: 'https://drive.google.com/uc?id=1njRgTTRQM2FSsT_4E6pHmv3wAmF6KJ9x',
                         scale: 0.3
                     }),
                     text: new ol.style.Text({
@@ -1044,10 +1351,10 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
                     })
                 });
             }
-            if(charge_value<=50){
+            if (charge_value <= 50) {
                 return new ol.style.Style({
                     image: new ol.style.Icon({
-                        src: 'https://drive.google.com/uc?id=1gVAz0AR83U4FVlCECuhCkniUQsN11kwE',
+                        src: 'https://drive.google.com/uc?id=1-hCGQhvovXkPYkKo3hN_ro4m56Y891wZ',
                         scale: 0.3
                     }),
                     text: new ol.style.Text({
@@ -1058,28 +1365,44 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
                     })
                 });
             }
-            if(charge_value<=75){
+            if (charge_value <= 75) {
                 return new ol.style.Style({
                     image: new ol.style.Icon({
-                        src: 'https://drive.google.com/uc?id=1pr4wDy7IV04PR_CurkNJf183sAXqo5l9',
+                        src: 'https://drive.google.com/uc?id=1Ph3JAcnkKoA9cRXiUvXN4CDKyk3m1VAS',
                         scale: 0.3
                     }),
                     text: new ol.style.Text({
                         text: size.toString(),
                         fill: new ol.style.Fill({
                             color: '#000'
+                        })
+                    })
+                });
+            }
+
+            if (charge_value <= 100) {
+                return new ol.style.Style({
+                    image: new ol.style.Icon({
+                        src: 'https://drive.google.com/uc?id=1g45LUbNX56l5DSEb-LR0wHm1oy_Rpzpp',
+                        scale: 0.3
+                    }),
+
+                    text: new ol.style.Text({
+                        text: size.toString(),
+                        fill: new ol.style.Fill({
+                            color: '#fff'
                         })
                     })
                 });
             }
             return new ol.style.Style({
-                    image: new ol.style.Icon({
-                        src: 'https://drive.google.com/uc?id=1u2jrLuhdu7gqSnUcBiyBe9zdSNY-OotF',
-                        scale: 0.3
-                    }),
+                image: new ol.style.Icon({
+                    src: 'https://drive.google.com/uc?id=1ntcdrtmcZ35fxgUJYfIRWd4Zu7riDHDf',
+                    scale: 1.0
+                }),
 
                 text: new ol.style.Text({
-                    text: size.toString(),
+                    text: 'API',
                     fill: new ol.style.Fill({
                         color: '#fff'
                     })
@@ -1087,16 +1410,92 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
             });
         }
     });
+    // sleep(1000).then(() => {
+    // console.log(geojson_features.length);
+    // });
+    const vectorSourceGeojson = new ol.source.Vector({
+        features:geojson_features
+    });
+    const clusterSourceGeojson = new ol.source.Cluster({
+        distance:  30,
+        minDistance: 30,
+        source: vectorSourceGeojson,
+    });
+    const vectorLayerGeojson = new ol.layer.Vector({
+        source: clusterSourceGeojson,
+        style: function(feature) {
+            console.log(feature);
+            let c_hue=[];
+            for(let ind=0;ind<selected_metrics.length;ind++){
+                let mul = 1;
+                let value_sum=0;
+                for(let feat=0;feat<feature.values_.features.length;feat++){
+                    if (selected_metrics[ind] === 'lowincfpct') {
+                        mul = feature.values_.features[feat].values_['population'];
+                    }
+                     value_sum= value_sum+hashmap_metrics[ind][feature.values_.features[feat].values_[selected_metrics[ind]] * mul]/array_metrics[ind].length;
+                }
+                let value=value_sum/feature.values_.features.length;
+                let c = c_palette[ind]
+                let color='transparent';
+                // let value = feature.values_[selected_metrics[ind]];
+                if(value<=0.2)
+                    color='rgba(' + c + ',0.2)';
+                else if(value<=0.4)
+                    color='rgba(' + c + ',0.4)';
+                else if(value<=0.6)
+                    color='rgba(' + c + ',0.6)';
+                else if(value<=0.8)
+                    color='rgba(' + c + ',0.8)';
+                else if(value>0.8)
+                    color='rgba(' + c + ',1.0)';
+                c_hue.push(color);
+            }
+            for(let ind=selected_metrics.length;ind<9;ind++){
+                c_hue.push('transparent');
+            }
+            const canvas = document.createElement("canvas");
+            const patternCanvas = document.createElement("canvas");
+            patternCanvas.width = 10;
+            patternCanvas.height = 10;
+            const ctx = canvas.getContext("2d");
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    ctx.fillStyle =c_hue[3*i+j];
+                    ctx.fillRect(j * patternCanvas.width, i * patternCanvas.height, patternCanvas.width, patternCanvas.height);
+                }
+            }
+            // const pattern = ctx.createPattern(canvas,'repeat');
+            return new ol.style.Style({
+                image: new ol.style.Icon({
+                    img: canvas,
+                    imgSize: [90,90]
+                })
+            });
+        }
+        // style: function(feature) {
+        //     // console.log(feature.values_.features[0].values_.charge);
+        //     return new ol.style.Style({
+        //         image: new ol.style.Icon({
+        //             src: 'icon.png',
+        //             scale: 0.5
+        //         })
+        //     });
+        // }
+    });
     const layers=[shpLayer];
-        let osm=new ol.layer.Tile({
-            source: new ol.source.OSM()
-        });
-        osm.setOpacity(0.5);
-        layers.push(osm);
+    let osm=new ol.layer.Tile({
+        source: new ol.source.OSM()
+    });
+    osm.setOpacity(0.25);
+    layers.push(osm);
+    layers.push(vectorLayerGeojson);
+    // layers.push(vectorLayer);
     // for(let i=0;i<rows;i++){
     //     layers.push(VectorLayerPoiGrouped[i]);
     // }
     layers.push(vectorLayerPoi);
+    layers.push(vectorLayerStat);
     if (selectedFuelTypes['cng']){
         layers.push(vectorLayerCng)
     }
@@ -1125,7 +1524,7 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
             vectorLayerE85)
     }
     const layerGroup= new ol.layer.Group({
-            layers:layers
+        layers:layers
     })
     // const map = new ol.Map({
     //     target: 'js-map',
@@ -1155,15 +1554,40 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
             }
         })
     let feature_onClick;
-    map.on('moveend',function(evt){
-        set_maps();
-    });
     map.on('click', function(evt) {
-        console.log(evt.pointerEvent.clientX);
+        console.log(evt.coordinate);
         station_coordinates=evt.coordinate;
-        feature_onClick = map.forEachFeatureAtPixel(evt.pixel, function (feature, vectorLayerPoi) {
+        feature_onClick = map.forEachFeatureAtPixel(evt.pixel, function (feature, shpLayer) {
+            console.log(feature);
+            let barchartPopup = document.getElementById("popup_barchart");
+            barchartPopup.style.left=evt.pointerEvent.clientX+40+'px';
+            barchartPopup.style.top=evt.pointerEvent.clientY+'px';
             console.log(map.getView().getCenter());
-            console.log(feature.values_.features[0].values_.name);
+            console.log(feature);
+            let geojsonStr = feature.values_;
+            console.log(geojsonStr);
+            console.log(metrics_selected[0]);
+            console.log(metrics_hashmap);
+            console.log(metrics_array);
+            let bars=[];
+            for(let ind=0;ind<metrics_selected.length;ind++){
+                let mul = 1;
+                let value_sum=0;
+                for(let feat=0;feat<feature.values_.features.length;feat++){
+                    if (selected_metrics[ind] === 'lowincfpct') {
+                        mul = feature.values_.features[feat].values_['population'];
+                    }
+                    value_sum= value_sum+feature.values_.features[feat].values_[selected_metrics[ind]] * mul;
+                }
+                let value=value_sum/feature.values_.features.length;
+                console.log(value);
+                bars.push(metrics_hashmap[ind][value]/metrics_array[ind].length);
+            }
+            console.log(bars);
+            drawBarChart(bars,metrics_selected,geojsonStr.city);
+            console.log(metrics_selected);
+            console.log(feature.values_);
+            console.log(feature);
             myExtent = map.getView().calculateExtent(map.getSize());
             zoom=map.getView().getZoom();
             center=map.getView().getCenter();
@@ -1251,15 +1675,17 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
             //                 to_be_added=to_be_added+"\nHousing Burden: "+data2Dict[feature.values_.city][$(this).val()]+"\n";
             //         }
             //     }
-            // }),
-            let popup_addS = document.getElementById("popup_barchart");
-            popup_addS.style.left=evt.pointerEvent.clientX-10+'px';
-            popup_addS.style.top=evt.pointerEvent.clientY+120+'px';
-            popup.innerHTML="Place Name: "+feature.values_.features[0].values_.name;
-            mainPopup.style.left=evt.pointerEvent.clientX-10+'px';
-            mainPopup.style.top=evt.pointerEvent.clientY+120+'px';
+            // })
+            try{popup.innerHTML="Place Name: "+feature.values_.features[0].values_.name;}
+            catch(e){
+                drawBarChart(bars,metrics_selected,geojsonStr.city);
+                console.log(e);
+            }
+
+            mainPopup.style.left=evt.pointerEvent.clientX+40+'px';
+            mainPopup.style.top=evt.pointerEvent.clientY-20+'px';
             console.log(feature);
-            document.getElementById("Place_id").innerHTML=feature.values_.features[0].values_.name;
+            // document.getElementById("Place_id").innerHTML=feature.values_.features[0].values_.name;
             //document.getElementById("metric_value").innerHTML=Math.pow(feature.style_.image_.radius_,3);
             return feature;
         });
@@ -1363,14 +1789,14 @@ function drawMap() {
                 current_showing_state_postal = d.properties.iso_3166_2;
                 mouse_overed_state_id = name_to_code_dict[stateNameProcessing(mouse_overed_state_full_name)];
 
-                document.getElementById("main_title_h2").innerHTML = "Alternative Fuel Stations Construction in the " + mouse_overed_state_full_name;
-                document.getElementById("construction_h3").innerHTML = "Yearly construction for the " + mouse_overed_state_full_name;
-                document.getElementById("policy_h3").innerHTML = "New Policy for the " + mouse_overed_state_full_name;
+                // document.getElementById("main_title_h2").innerHTML = "Alternative Fuel Stations Construction in the " + mouse_overed_state_full_name;
+                // document.getElementById("construction_h3").innerHTML = "Yearly construction for the " + mouse_overed_state_full_name;
+                // document.getElementById("policy_h3").innerHTML = "New Policy for the " + mouse_overed_state_full_name;
 
                 svg_map.selectAll('circle').remove()
                 current_showing_data_name = mouse_overed_state_full_name;
                 getMapData(mouse_overed_state_id).then(() => {
-                    //drawMap();
+                    drawMap();
                     drawStations();
                 });
 
@@ -1383,12 +1809,12 @@ function init() {
     getMapData("USA").then(() => {
             current_showing_data_name = "USA";
             current_showing_state_postal = "USA";
-            //drawMap();
+            drawMap();
            // init_for_map();
         let popup = document.getElementById("myPopup");
         popup.classList.toggle("show");
             drawStations();
-        //     document.getElementById("main_title_h2").innerHTML = "Alternative Fuel Stations Construction in the U.S.";
+            // document.getElementById("main_title_h2").innerHTML = "Alternative Fuel Stations Construction in the U.S.";
         // document.getElementById("construction_h3").innerHTML = "Yearly construction for the U.S.";
         // document.getElementById("policy_h3").innerHTML = "New Policy for the U.S.";
 
@@ -1410,13 +1836,13 @@ d3.csv('data/full_csv.csv').then( (data) => {
      loadPoi(data);
 })
 
-d3.csv('data/Utah_city_stats.csv').then( (data) => {
-     loadCityData(data);
-});
-
 d3.csv('data/elec-batteries.csv').then( (data) => {
     loadCharge(data);
 })
+
+d3.csv('data/Utah_city_stats.csv').then( (data) => {
+     loadCityData(data);
+});
 
 d3.csv('data/cng_Utah.csv').then((data) => {
     loadData(data, 'cng');
@@ -1460,13 +1886,13 @@ sleep(5000).then(() => {
 $(document).ready(function () {
     //colors from the seaborn tab10 color pallette
 
-    document.getElementById('cng_label').style.background = colors['cng'];
-    document.getElementById('lng_label').style.background = colors['lng'];
-    document.getElementById('lpg_label').style.background = colors['lpg'];
-    document.getElementById('e85_label').style.background = colors['e85'];
-    document.getElementById('bd_label').style.background = colors['bd'];
-    document.getElementById('elec_label').style.background = colors['elec'];
-    document.getElementById('hy_label').style.background = colors['hy'];
+    // document.getElementById('cng_label').style.background = colors['cng'];
+    // document.getElementById('lng_label').style.background = colors['lng'];
+    // document.getElementById('lpg_label').style.background = colors['lpg'];
+    // document.getElementById('e85_label').style.background = colors['e85'];
+    // document.getElementById('bd_label').style.background = colors['bd'];
+    // document.getElementById('elec_label').style.background = colors['elec'];
+    // document.getElementById('hy_label').style.background = colors['hy'];
     // document.getElementById('time-control-slider').addEventListener('slider', (event) => {
     //     visibleRange = [event.detail[0], event.detail[1]];
     //     drawStations();
@@ -1478,19 +1904,19 @@ $(document).ready(function () {
         svg_law_linear_graph.selectAll('.lineChartLine').remove();
         // svg_time_slider.selectAll("#xTicks_minor_slider").remove();
 
-        $('input:checkbox').each(function () {
-            if($(this)[0].id === "cng"
-                || $(this)[0].id === "lng"
-                || $(this)[0].id === "lpg"
-                || $(this)[0].id === "e85"
-                || $(this)[0].id === "bd"
-                || $(this)[0].id === "elec"
-                || $(this)[0].id === "hy"
-            ){
-                selectedFuelTypes[$(this).val()] = $(this).is(':checked');
-
-            }
-        });
+        // $('input:checkbox').each(function () {
+        //     if($(this)[0].id === "cng"
+        //         || $(this)[0].id === "lng"
+        //         || $(this)[0].id === "lpg"
+        //         || $(this)[0].id === "e85"
+        //         || $(this)[0].id === "bd"
+        //         || $(this)[0].id === "elec"
+        //         || $(this)[0].id === "hy"
+        //     ){
+        //         selectedFuelTypes[$(this).val()] = $(this).is(':checked');
+        //
+        //     }
+        // });
         drawStations();
         draw_bar_chart();
     });
