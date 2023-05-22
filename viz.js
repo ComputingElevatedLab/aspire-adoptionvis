@@ -13,49 +13,97 @@ let myExtent = [
     -12322948.771123363,
     5097419.815963253
 ];
-var station_coordinates;
-function divideArray(array, numOfPartitions) {
-    const frequencyMap = {};
-    const partitions = [];
-
-    // Count frequency of each element in the array
-    array.forEach(element => {
-        if (!frequencyMap[element]) {
-            frequencyMap[element] = 1;
-        } else {
-            frequencyMap[element]++;
-        }
-    });
-
-    // Sort the elements based on frequency
-    const sortedArray = array.sort((a, b) => frequencyMap[a] - frequencyMap[b]);
-
-    // Calculate target frequency
-    const targetFrequency = array.length / numOfPartitions;
-
-    // Create partitions
-    let partitionIndex = 0;
-    while (sortedArray.length > 0) {
-        if (!partitions[partitionIndex]) {
-            partitions[partitionIndex] = [];
-        }
-
-        const currentElement = sortedArray.shift();
-        partitions[partitionIndex].push(currentElement);
-        frequencyMap[currentElement]--;
-
-        if (partitions[partitionIndex].length === targetFrequency) {
-            partitionIndex++;
-        }
-
-        if (frequencyMap[currentElement] === 0) {
-            delete frequencyMap[currentElement];
-        }
-    }
-
-    return partitions;
+let show_chargers=false
+function cancel(){
+    let togg_st=document.getElementById('station');
+    togg_st.classList.toggle('pressed');
+    let popup_add_st=document.getElementById('popup_add_st');
+    popup_add_st.style.display="none";
+    let olMap=document.getElementById('js-map');
+    olMap.style.opacity='1';
+    map.getInteractions().forEach(function(interaction) {
+        interaction.setActive(true)
+    })
+}
+function toggleVis(){
+    let olMap=document.getElementById('js-map');
+    olMap.style.opacity='1';
+    map.getInteractions().forEach(function(interaction) {
+        interaction.setActive(true)
+    })
+    let popup_add_st=document.getElementById('popup_barchart');
+    popup_add_st.style.display="none";
 }
 
+function toggleSt(){
+    let olMap=document.getElementById('js-map');
+    map.getInteractions().forEach(function(interaction) {
+        interaction.setActive(false)
+    })
+    olMap.style.opacity='0.4';
+    map.on('click', function(evt) {
+        console.log(evt.coordinate);
+        let wgs84Coordinates = ol.proj.transform(evt.coordinate, 'EPSG:3857', 'EPSG:4326');
+        document.getElementById('lat_input').value=""+wgs84Coordinates[1];
+        document.getElementById('lon_input').value=""+wgs84Coordinates[0];
+    })
+    let popup_add_st=document.getElementById('popup_barchart');
+    if (popup_add_st.style.display === "none") {
+        popup_add_st.style.display = "block";
+    }
+}
+
+function toggleApi(){
+    if(show_chargers)
+        show_chargers=false;
+    else
+        show_chargers=true;
+    drawStations();
+}
+var station_features=[];
+function toggleElec(){
+    if(selectedFuelTypes['elec'])
+        selectedFuelTypes['elec']=false;
+    else
+        selectedFuelTypes['elec']=true;
+    drawStations();
+}
+function showChargers(){
+    if(station_features.length===0) {
+        let url = 'http://144.39.204.242:11236/charger';
+        fetch(url)
+            .then((response) => {
+                return response.json();
+            })
+            .then((data) => {
+                let arr = data.data;
+                for (let i = 0; i < arr.length; i++) {
+                    let url1="http://144.39.204.242:11236/charger/"+arr[i]['id']+"/status?recent=true";
+                    fetch(url1)
+                        .then((res) => {
+                            return res.json();
+                        }).then(dat=>{
+                        let dic=dat.data;
+                        let ch=dic['status'];
+                        station_features.push(new ol.Feature({
+                            geometry: new ol.geom.Point(ol.proj.fromLonLat([+arr[i]['longitude'], +arr[i]['latitude']])),
+                            name: arr[i]['chargerName'],
+                            city: "sample city",
+                            charge: ch,
+                            size: 10
+                        }));
+                    })
+                }
+                console.log(station_features);
+                sleep(1000).then(() => {
+                    console.log(station_features);
+                    drawStations();
+                });
+            })
+    }
+}
+
+var station_coordinates;
 let center=ol.proj.fromLonLat([-111.0937, 39.3210]);
 let zoom=6;
 
@@ -243,6 +291,8 @@ function addStation(){
 }
 
 function init() {
+    let popup_add_st=document.getElementById('popup_barchart');
+    popup_add_st.style.display="none";
     let data = [];
     let data1=[];
     let data2=[];
@@ -436,6 +486,7 @@ function drawStations() {
     //             selected_metric=ele[i].value;
     // }
     console.log(selected_metric+"The selected metric");
+    console.log("items"+shp_features.features.length);
     for(thing=0;thing<shp_features.features.length;thing++){
         let multiplier=1;
         if (selected_metric === 'lowincfpct') {
@@ -768,6 +819,9 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
             features:poi_features
         }),
     })
+    const vectorSourceStat=new ol.source.Vector({
+        features:station_features
+    });
     const vectorSourceCng = new ol.source.Vector({
         features:cng_features
     });
@@ -794,6 +848,12 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
         distance:  10,
         minDistance: 10,
         source: vectorSourceElec,
+    });
+
+    const clusterSourceStat=new ol.source.Cluster({
+        distance:  10,
+        minDistance: 10,
+        source: vectorSourceStat,
     });
 
     const clusterSourceHy = new ol.source.Cluster({
@@ -876,6 +936,90 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
     //         }
     //     }))
     // }
+    const vectorLayerStat= new ol.layer.Vector({
+        source: clusterSourceStat,
+        style: function(feature) {
+            console.log(feature.values_.features[0].values_.charge);
+            const size = feature.get('features').length;
+            // new ol.style.Style({
+            //     image: new ol.style.RegularShape({
+            //         radius: Math.pow(maximum_visits/(rows-i),0.4),
+            //         points:4,
+            //         angle: 90,
+            //         stroke:new ol.style.Stroke({color: '#000'}),
+            //         fill: new ol.style.Fill({color: '#FFF'})
+            //     })
+            // })
+            let charge_arr = feature.values_.features;
+            let charge_value = 0;
+            let num = 0;
+            charge_arr.forEach(function (d) {
+                num = +(d.values_.charge);
+                charge_value = charge_value + num;
+            })
+            charge_value = charge_value / charge_arr.length;
+            if(feature.values_.features[0].values_.charge==='Available') {
+                return new ol.style.Style({
+                    image: new ol.style.Icon({
+                        src: 'https://drive.google.com/uc?id=121O9wzTRfvr5PiuJWACxMZhIQHJ3OfuF',
+                        scale: 0.7
+                    }),
+
+                    text: new ol.style.Text({
+                        text: size.toString(),
+                        fill: new ol.style.Fill({
+                            color: '#fff'
+                        })
+                    })
+                });
+            }
+            if(feature.values_.features[0].values_.charge==='Unavailable') {
+                return new ol.style.Style({
+                    image: new ol.style.Icon({
+                        src: 'https://drive.google.com/uc?id=1mgsyQ-ahKI59XCNw8hQr-rXNHqGE7eyK',
+                        scale: 0.7
+                    }),
+
+                    text: new ol.style.Text({
+                        text: size.toString(),
+                        fill: new ol.style.Fill({
+                            color: '#fff'
+                        })
+                    })
+                });
+            }
+            if(feature.values_.features[0].values_.charge==='Charging') {
+                return new ol.style.Style({
+                    image: new ol.style.Icon({
+                        src: 'https://drive.google.com/uc?id=1Tp3uyJVlMNFlYt5UZbBL9HF-P5WT7Ihq',
+                        scale: 0.7
+                    }),
+
+                    text: new ol.style.Text({
+                        text: size.toString(),
+                        fill: new ol.style.Fill({
+                            color: '#fff'
+                        })
+                    })
+                });
+            }
+            if(feature.values_.features[0].values_.charge==='Preparing') {
+                return new ol.style.Style({
+                    image: new ol.style.Icon({
+                        src: 'https://drive.google.com/uc?id=16obw9VRI0rxN1S30n9RtomZh2rlgWvJ5',
+                        scale: 0.7
+                    }),
+
+                    text: new ol.style.Text({
+                        text: size.toString(),
+                        fill: new ol.style.Fill({
+                            color: '#fff'
+                        })
+                    })
+                });
+            }
+        }
+    });
     const vectorLayerCng = new ol.layer.Vector({
         source: clusterSourceCng,
         // style: new ol.style.Style({
@@ -966,6 +1110,7 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
             });
         }
     });
+
     const vectorLayerE85 = new ol.layer.Vector({
         source: clusterSourceE85,
         style: function(feature) {
@@ -1097,6 +1242,8 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
     //     layers.push(VectorLayerPoiGrouped[i]);
     // }
     layers.push(vectorLayerPoi);
+    if(show_chargers)
+        layers.push(vectorLayerStat);
     if (selectedFuelTypes['cng']){
         layers.push(vectorLayerCng)
     }
@@ -1159,11 +1306,13 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
         set_maps();
     });
     map.on('click', function(evt) {
+        let pop=document.getElementById('popup');
+        pop.style.display="block";
         console.log(evt.pointerEvent.clientX);
         station_coordinates=evt.coordinate;
         feature_onClick = map.forEachFeatureAtPixel(evt.pixel, function (feature, vectorLayerPoi) {
             console.log(map.getView().getCenter());
-            console.log(feature.values_.features[0].values_.name);
+            // console.log(feature.values_.features[0].values_.name);
             myExtent = map.getView().calculateExtent(map.getSize());
             zoom=map.getView().getZoom();
             center=map.getView().getCenter();
@@ -1252,9 +1401,9 @@ else if(hashmap_metrics[value]/array_metrics.length>0.8)
             //         }
             //     }
             // }),
-            let popup_addS = document.getElementById("popup_barchart");
-            popup_addS.style.left=evt.pointerEvent.clientX-10+'px';
-            popup_addS.style.top=evt.pointerEvent.clientY+120+'px';
+            // let popup_addS = document.getElementById("popup_barchart");
+            // popup_addS.style.left=evt.pointerEvent.clientX-10+'px';
+            // popup_addS.style.top=evt.pointerEvent.clientY+120+'px';
             popup.innerHTML="Place Name: "+feature.values_.features[0].values_.name;
             mainPopup.style.left=evt.pointerEvent.clientX-10+'px';
             mainPopup.style.top=evt.pointerEvent.clientY+120+'px';
@@ -1379,6 +1528,19 @@ function drawMap() {
 
 }
 function init() {
+    var docs = document.getElementsByClassName('btn');
+    for (var i = 0; i < docs.length; i++) {
+        (function() {
+            var doc = docs[i];
+            doc.addEventListener('click', function() {
+                // Toggle the 'pressed' class on the button
+                doc.classList.toggle('pressed');
+            });
+        })();
+    }
+    $('#popup_barchart').draggable();
+    let popup_add_st=document.getElementById('popup_barchart');
+    popup_add_st.style.display="none";
     document.getElementById("poi_hour").defaultValue = "10";
     getMapData("USA").then(() => {
             current_showing_data_name = "USA";

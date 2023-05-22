@@ -16,7 +16,8 @@
 
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://d3js.org/topojson.v3.min.js"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.min.js"></script>
   <script src="v6.1.1-dist/ol.js"></script>
 </head>
 
@@ -45,33 +46,35 @@
 <!--      <div id="law_linear_graph"></div>-->
 <!--      <br/>-->
 <!--      <h1>With OpenLayers</h1>-->
-<label for="vis_metric">POI Metric:</label>
-<select name="vis_metric" id="vis_metric" onchange="drawStations()" class="select">
-  <option value="hours">Popularity (Hours)</option>
-  <option value="visits">Visits (Day)</option>
-</select>
-<select name="demo_metric" onchange="drawStations()" id="demo_metric" class="select">
-  <option value="population" >Population</option>
-  <option value="pm25">Pollution</option>
-  <option value="over64pct">Age(Population percentage Over 64)</option>
-  <option value="lowincfpct">Poverty</option>
-  <option value="cancer">Cancer Risk</option>
-  <option value="foodsrtpct">Food Desert Percentage</option>
-  <option value="unemppct">Unemployment Percentage</option>
-  <option value="homelespct">Homeless Percentage</option>
-  <option value="housebrdn">Housing Cost</option>
-</select>
-<!--<input type="submit" value="Submit" onclick="drawStations()">-->
-<!--<br>-->
-<!--<text>Selected Place Name:   </text>-->
-<!--<text id="Place_id">N/A</text>-->
-<!--      <text>Metric Value:   </text>-->
-<!--      <text id="metric_value">N/A</text>-->
-<!--<br/>-->
-<div style="float:left">
-  <label for="poi_hour">Time:</label>
-  <input type="range" id="poi_hour" name="poi_hour" min="1" max="24" onchange="drawStations();setText(this.value);">
-  <text id="hour_vis">10:00</text>
+<div style="background:orange;width:800px">
+    <label for="vis_metric">POI Metric:</label>
+    <select name="vis_metric" id="vis_metric" onchange="drawStations()" class="select">
+        <option value="hours">Popularity (Hours)</option>
+        <option value="visits">Visits (Day)</option>
+    </select>
+    <select name="demo_metric" onchange="drawStations()" id="demo_metric" class="select">
+        <option value="population" >Population</option>
+        <option value="pm25">Pollution</option>
+        <option value="over64pct">Age(Population percentage Over 64)</option>
+        <option value="lowincfpct">Poverty</option>
+        <option value="cancer">Cancer Risk</option>
+        <option value="foodsrtpct">Food Desert Percentage</option>
+        <option value="unemppct">Unemployment Percentage</option>
+        <option value="homelespct">Homeless Percentage</option>
+        <option value="housebrdn">Housing Cost</option>
+    </select>
+    <label for="poi_hour">Time:</label>
+    <input type="range" id="poi_hour" name="poi_hour" min="1" max="24" onchange="drawStations();setText(this.value);">
+    <text id="hour_vis">10:00</text>
+    <button id="pan" class="btn btn-outline-primary" onclick="toggleVis()">
+        <img style="width:20px;height:20px;" src="https://www.kindpng.com/picc/m/249-2495351_move-direction-arrow-panning-icon-hd-png-download.png" alt="Move Direction Arrow - Panning Icon, HD Png Download@kindpng.com">
+    </button>
+    <button id="station" class="btn btn-outline-primary" onclick="toggleSt()">
+        <img style="width:20px;height:20px" src="https://www.clipartmax.com/png/small/195-1957927_gas-station-comments-gas-station-icon.png" alt="Gas Station Comments - Gas Station Icon @clipartmax.com">
+    </button>
+    <button id="toggle_ch" class="btn btn-outline-primary" onclick="toggleElec()">Toggle Stations</button>
+    <button id="toggle_api" class="btn btn-outline-primary" onclick="toggleApi()">Toggle API</button>
+    <button id="fetch_api" class="btn btn-outline-primary" onclick="showChargers()">Fetch API</button>
 </div>
 <div style="float:left; visibility: hidden" class="loader" id="loader"></div>
 <br/>
@@ -95,7 +98,7 @@
     <button type="button" id="USA_button" onclick="set_maps()">Set Maps</button>
   </div>
 </div>
-<div class="popup" id="popup">
+<div class="popup" id="popup" style="display: none">
   <span class="popuptext" id="myPopup">Popup text...</span>
 </div>
 <div style="float: right">
@@ -133,9 +136,7 @@
 <!--  <label id="housing_label" class="checkbox-label-metric" for="hy">Housing Cost(Hoc)</label>-->
 <!--  <br>-->
 </div>
-<div id="js-map" class="map" style="height: 350px">
-</div>
-<div class="popup" id="popup_barchart" style="background: white;border: 2px solid black">
+<div class="popup" id="popup_barchart" style="background: white;border: 2px solid black;z-index: 1">
     <input type="text" id="station_input" name="station" placeholder="Enter The Station name">
     <br>
     <input type="text" id="charge_input" name="charge" placeholder="Enter The Charge/Availability">
@@ -144,10 +145,10 @@
     <br>
     <input type="text" id="lon_input" name="latitude" placeholder="Enter The Longitude">
     <br>
-    <input type="checkbox" id="station_on_click" value='YES'>
-    <label id="station_OC" class="checkbox-metric" >Get coordinates from last click?</label>
-    <br>
-    <input style="position: absolute; left: 50%" type="submit" value="Add Station" onclick="addStation()">
+    <input type="submit" value="OK" onclick="addStation()">
+    <input type="submit" value="CANCEL" onclick="cancel()">
+</div>
+<div id="js-map" class="map" style="height: 350px">
 </div>
 </div>
 <div class="overlay-container">

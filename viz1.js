@@ -1,6 +1,7 @@
 // window.onload=drawOpenLayersMap;
 // document.body.style.zoom = "50%";
 let width = document.body.clientWidth * 0.64;
+var elec_features = [];
 let height = 500;
 let file_location = 'data/stations.csv';
 let svg_map = d3.select('#stations-over-time-viz').append('svg')
@@ -13,7 +14,96 @@ let myExtent = [
     -12322948.771123363,
     5097419.815963253
 ];
+function cancel(){
+    let togg_st=document.getElementById('station');
+    togg_st.classList.toggle('pressed');
+    let popup_add_st=document.getElementById('popup_add_st');
+    popup_add_st.style.display="none";
+    let olMap=document.getElementById('js-map');
+    olMap.style.opacity='1';
+    map.getInteractions().forEach(function(interaction) {
+        interaction.setActive(true)
+    })
+}
+let show_chargers=false
 
+function toggleVis(){
+    let olMap=document.getElementById('js-map');
+    olMap.style.opacity='1';
+    map.getInteractions().forEach(function(interaction) {
+        interaction.setActive(true)
+    })
+    let popup_add_st=document.getElementById('popup_barchart');
+    popup_add_st.style.display="none";
+}
+
+function toggleSt(){
+    let olMap=document.getElementById('js-map');
+    map.getInteractions().forEach(function(interaction) {
+        interaction.setActive(false)
+    })
+    olMap.style.opacity='0.4';
+    map.on('click', function(evt) {
+        console.log(evt.coordinate);
+        let wgs84Coordinates = ol.proj.transform(evt.coordinate, 'EPSG:3857', 'EPSG:4326');
+        document.getElementById('lat_input').value=""+wgs84Coordinates[1];
+        document.getElementById('lon_input').value=""+wgs84Coordinates[0];
+    })
+    let popup_add_st=document.getElementById('popup_barchart');
+    if (popup_add_st.style.display === "none") {
+        popup_add_st.style.display = "block";
+    }
+}
+
+function toggleApi(){
+    if(show_chargers)
+        show_chargers=false;
+    else
+        show_chargers=true;
+    drawStations();
+}
+var station_features=[];
+function toggleElec(){
+    if(selectedFuelTypes['elec'])
+        selectedFuelTypes['elec']=false;
+    else
+        selectedFuelTypes['elec']=true;
+    drawStations();
+}
+function showChargers(){
+    if(station_features.length===0) {
+        let url = 'http://144.39.204.242:11236/charger';
+        fetch(url)
+            .then((response) => {
+                return response.json();
+            })
+            .then((data) => {
+                let arr = data.data;
+                for (let i = 0; i < arr.length; i++) {
+                    let url1="http://144.39.204.242:11236/charger/"+arr[i]['id']+"/status?recent=true";
+                    fetch(url1)
+                        .then((res) => {
+                            return res.json();
+                        }).then(dat=>{
+                        let dic=dat.data;
+                        let ch=dic['status'];
+                        station_features.push(new ol.Feature({
+                            geometry: new ol.geom.Point(ol.proj.fromLonLat([+arr[i]['longitude'], +arr[i]['latitude']])),
+                            name: arr[i]['chargerName'],
+                            city: "sample city",
+                            charge: ch,
+                            size: 10
+                        }));
+                    })
+                }
+                console.log(station_features);
+                sleep(1000).then(() => {
+                    console.log(station_features);
+                    drawStations();
+                });
+            })
+    }
+}
 function divideArray(array, numOfPartitions) {
     const frequencyMap = {};
     const partitions = [];
@@ -54,6 +144,36 @@ function divideArray(array, numOfPartitions) {
     }
 
     return partitions;
+}
+
+function addStation(){
+    let st_name=document.getElementById('station_input').value;
+    let charge_val=document.getElementById('charge_input').value;
+    let lat=document.getElementById('lat_input').value;
+    let lon=document.getElementById('lon_input').value;
+    charge_val=+charge_val;
+    lat=+lat;
+    lon=+lon;
+    let isChecked=document.getElementById('station_on_click').checked;
+    if(!isChecked) {
+        elec_features.push(new ol.Feature({
+            geometry: new ol.geom.Point(ol.proj.fromLonLat([lon, lat])),
+            name: st_name,
+            city: "sample city",
+            charge: charge_val,
+            size: 10
+        }));
+    }
+    else{
+        elec_features.push(new ol.Feature({
+            geometry: new ol.geom.Point(station_coordinates),
+            name: st_name,
+            city: "sample city",
+            charge: charge_val,
+            size: 10
+        }));
+    }
+    drawStations();
 }
 
 let center=ol.proj.fromLonLat([-111.0937, 39.3210]);
@@ -474,7 +594,6 @@ function drawStations() {
     const poi_features=[];
     let poi_array=[];
     const lpg_features = [];
-    const elec_features = [];
     const hy_features = [];
     const bd_features = [];
     const e85_features = [];
@@ -991,7 +1110,6 @@ function drawStations() {
                 num=+(d.values_.charge);
                 charge_value=charge_value+num;
             })
-            console.log(charge_value+"value");
             charge_value=charge_value/charge_arr.length;
             if(charge_value<=25){
                 return new ol.style.Style({
@@ -1119,6 +1237,8 @@ function drawStations() {
     })
     let feature_onClick;
     map.on('click', function(evt) {
+        let pop=document.getElementById('popup');
+        pop.style.display="block";
         console.log(evt.pointerEvent.clientX);
         feature_onClick = map.forEachFeatureAtPixel(evt.pixel, function (feature, vectorLayerPoi) {
             console.log(map.getView().getCenter());
@@ -1335,6 +1455,19 @@ function drawMap() {
 
 }
 function init() {
+    var docs = document.getElementsByClassName('btn');
+    for (var i = 0; i < docs.length; i++) {
+        (function() {
+            var doc = docs[i];
+            doc.addEventListener('click', function() {
+                // Toggle the 'pressed' class on the button
+                doc.classList.toggle('pressed');
+            });
+        })();
+    }
+    $('#popup_barchart').draggable();
+    let popup_add_st=document.getElementById('popup_barchart');
+    popup_add_st.style.display="none";
     document.getElementById("poi_hour").defaultValue = "10";
     getMapData("USA").then(() => {
             current_showing_data_name = "USA";
