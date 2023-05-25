@@ -23,17 +23,6 @@ body {
     width: 800px;
 }
 
-.select{
-    background: #FFF;
-    border: 3px solid black;
-    border-radius: 10px;
-}
-
-.option{
-    border: 3px solid black;
-    border-radius: 10px;
-}
-
 .loader {
     margin-left: 6px;
     border: 4px solid #f3f3f3; /* Light grey */
@@ -52,21 +41,31 @@ body {
 .popup {
     position: absolute;
     display: inline-block;
+    align-items: center;
 }
 
 .popup .popuptext {
     visibility: hidden;
-    width: 300px;
+    margin-right: 10px;
+    width: max-content;
     background-color: #555;
     color: #fff;
     text-align: center;
     border-radius: 6px;
-    padding: 8px 0;
+    padding: 10px;
     position: absolute;
     z-index: 1;
     bottom: 125%;
     left: 50%;
-    margin-left: -80px;
+    margin-left: -40px;
+}
+
+.vertical-center {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
 }
 
 /* Toggle this class when clicking on the popup container (hide and show the popup) */
@@ -90,5 +89,4 @@ body {
 .pressed{
     border: 2px solid blue;
 }
-
 
