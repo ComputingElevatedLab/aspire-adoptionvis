@@ -7,14 +7,6 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="HTML File" />
-        <option value="JavaScript File" />
-      </list>
-    </option>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
@@ -22,24 +14,24 @@
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProjectId" id="2Ih49Hv5dRExgk4Fr3RAb5jf8wy" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
-    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/a02397403/Desktop/aspire-adoptionvis&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/a02397403/Desktop/Charging Stations Viz OpenLayers Time Slider&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\a02397403\Desktop\aspire-adoptionvis" />
+      <recent name="C:\Users\a02397403\Desktop\Charging Stations Viz OpenLayers Time Slider" />
       <recent name="C:\Users\a02397403\Desktop\Charging Stations Viz OpenLayers Time Slider\data" />
     </key>
   </component>
@@ -59,13 +51,15 @@
       <workItem from="1674624556037" duration="619000" />
       <workItem from="1674781362066" duration="75069000" />
       <workItem from="1675746947365" duration="19651000" />
-      <workItem from="1676360641362" duration="23638000" />
-      <workItem from="1676576131315" duration="1381000" />
-      <workItem from="1677546725068" duration="16932000" />
-      <workItem from="1677616611926" duration="13838000" />
-      <workItem from="1678222695230" duration="7823000" />
-      <workItem from="1679380927082" duration="29048000" />
-      <workItem from="1680616590902" duration="6267000" />
+      <workItem from="1676360641362" duration="43846000" />
+      <workItem from="1677607850077" duration="7562000" />
+      <workItem from="1677616605059" duration="9548000" />
+      <workItem from="1678222657453" duration="5154000" />
+      <workItem from="1678808239859" duration="14063000" />
+      <workItem from="1679380885014" duration="48302000" />
+      <workItem from="1680616633464" duration="47398000" />
+      <workItem from="1682439010456" duration="16456000" />
+      <workItem from="1685027965086" duration="1444000" />
     </task>
     <servers />
   </component>
@@ -82,16 +76,5 @@
         </entry>
       </map>
     </option>
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/viz.js</url>
-          <line>1077</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>
