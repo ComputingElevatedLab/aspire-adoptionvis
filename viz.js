@@ -1,5 +1,6 @@
 // window.onload=drawOpenLayersMap;
 let width = document.body.clientWidth * 0.64;
+var radarChart=null;
 let mouse_overed_state_on_bar = "";
 let hourwise_string="";
 let height = 500;
@@ -19,6 +20,7 @@ var myExtent = [
 ];
 var station_coordinates;
 var showNewElec=true;
+var showPoi=true;
 var elec_features = [];
 var new_elec_features=[];
 var station_features=[];
@@ -373,6 +375,14 @@ function toggleNewElec(){
     drawStations();
 }
 
+function togglePoi(){
+    if(showPoi)
+        showPoi=false;
+    else
+        showPoi=true;
+    drawStations();
+}
+
 function addStation(){
     let st_name=document.getElementById('station_input').value;
     let charge_val=document.getElementById('charge_input').value;
@@ -467,6 +477,7 @@ function hideLoader(){
 }
 
 function drawStations() {
+   let selected_viz= document.getElementById("visualization_tool").value;
     console.log(elec_features);
     console.log(newStations);
     $('div.ol-zoom-out').text('-');
@@ -561,100 +572,170 @@ function drawStations() {
     let geojson_features=[];
     let selected_metric='';
     let selected_metrics=[];
-    $('input:checkbox').each(function () {
-        if ($(this)[0].id === "population")
+    let sortedList = document.getElementById("checkbox-list");
+    console.log(sortedList);
+    let listElements = sortedList.querySelectorAll("input");
+    for(let thing=0;thing<listElements.length;thing++){
+        let metrica = document.getElementById(listElements[thing].value+"_label");
+        metrica.style.color="#000";
+        metrica.style.background="#FFF";
         {
-            let metrica = document.getElementById("population"+"_label");
-            metrica.style.color="#000";
-            metrica.style.background="#FFF";
-            {
-                if($(this).is(':checked')) {
-                    selected_metrics.push($(this).val());
-                }
+            if($(this).is(':checked')) {
+                selected_metrics.push($(this).val());
             }
         }
-        if ($(this)[0].id === "age")
-        {
-            let metrica = document.getElementById($(this).val()+"_label");
-            metrica.style.color="#000";
-            metrica.style.background="#FFF";
-            {
-                if($(this).is(':checked'))
-                    selected_metrics.push($(this).val());
-            }
-        }
-        if ($(this)[0].id === "poverty")
-        {
-            let metrica = document.getElementById($(this).val()+"_label");
-            metrica.style.color="#000";
-            metrica.style.background="#FFF";
-            {
-                if($(this).is(':checked'))
-                    selected_metrics.push($(this).val());
-            }
-        }
-        if ($(this)[0].id === "pollution")
-        {
-            let metrica = document.getElementById($(this).val()+"_label");
-            metrica.style.color="#000";
-            metrica.style.background="#FFF";
-            {
-                if($(this).is(':checked'))
-                    selected_metrics.push($(this).val());
-            }
-        }
-        if ($(this)[0].id === "cancer")
-        {
-            let metrica = document.getElementById($(this).val()+"_label");
-            metrica.style.color="#000";
-            metrica.style.background="#FFF";
-            {
-                if($(this).is(':checked'))
-                    selected_metrics.push($(this).val());
-            }
-        }
-        if ($(this)[0].id === "food")
-        {
-            let metrica = document.getElementById($(this).val()+"_label");
-            metrica.style.color="#000";
-            metrica.style.background="#FFF";
-            {
-                if($(this).is(':checked'))
-                    selected_metrics.push($(this).val());
-            }
-        }
-        if ($(this)[0].id === "unemployment")
-        {
-            let metrica = document.getElementById($(this).val()+"_label");
-            metrica.style.color="#000";
-            metrica.style.background="#FFF";
-            {
-                if($(this).is(':checked'))
-                    selected_metrics.push($(this).val());
-            }
-        }
-        if ($(this)[0].id === "homeless")
-        {
-            let metrica = document.getElementById($(this).val()+"_label");
-            metrica.style.color="#000";
-            metrica.style.background="#FFF";
-            {
-                if($(this).is(':checked'))
-                    selected_metrics.push($(this).val());
+        if(listElements[thing].checked)
+            selected_metrics.push(listElements[thing].value);
+    }
+    if(selected_metrics.length!=0){
 
-            }
+        if (radarChart) {
+            radarChart.destroy(); // Destroy the existing chart
         }
-        if ($(this)[0].id === "housing")
-        {
-            let metrica = document.getElementById($(this).val()+"_label");
-            metrica.style.color="#000";
-            metrica.style.background="#FFF";
-            {
-                if($(this).is(':checked'))
-                    selected_metrics.push($(this).val());
-            }
+        let canvas_legend=document.getElementById('legend_canvas');
+        // Data for the radar chart (only labels, no data)
+        const data_legend = {
+            labels: selected_metrics
+        };
+
+// Configuration options for the radar chart
+        const options = {
+            responsive: false, // Disable responsiveness
+                maintainAspectRatio: false, // Disable aspect ratio
+                animation: false, // Disable animation
+                scales: {
+                r: {
+                    angleLines: {
+                        display: true, // Show angle lines
+                    },
+                    grid: {
+                        display: true, // Show grid lines
+                    },
+                    ticks: {
+                        display: false, // Hide tick labels
+                    },
+                    pointLabels: {
+                        display: true,//Hide the labels
+                    },
+                },
+            },
+            plugins: {
+                legend: {
+                    display: false, // Hide legend
+                },
+            },
+            interaction: {
+                mode: 'nearest', // Disable hover interactions
+            },
         }
-    })
+
+if(selected_viz==="radar") {
+    document.getElementById("legend_canvas").style.display="block";
+// Create the radar chart
+    radarChart = new Chart(canvas_legend, {
+        type: 'radar',
+        data: data_legend,
+        options: options,
+    });
+}
+else{
+    document.getElementById("legend_canvas").style.display="none";
+}
+    }
+    // $('input:checkbox').each(function () {
+    //     if ($(this)[0].id === "population")
+    //     {
+    //         let metrica = document.getElementById("population"+"_label");
+    //         metrica.style.color="#000";
+    //         metrica.style.background="#FFF";
+    //         {
+    //             if($(this).is(':checked')) {
+    //                 selected_metrics.push($(this).val());
+    //             }
+    //         }
+    //     }
+    //     if ($(this)[0].id === "age")
+    //     {
+    //         let metrica = document.getElementById($(this).val()+"_label");
+    //         metrica.style.color="#000";
+    //         metrica.style.background="#FFF";
+    //         {
+    //             if($(this).is(':checked'))
+    //                 selected_metrics.push($(this).val());
+    //         }
+    //     }
+    //     if ($(this)[0].id === "poverty")
+    //     {
+    //         let metrica = document.getElementById($(this).val()+"_label");
+    //         metrica.style.color="#000";
+    //         metrica.style.background="#FFF";
+    //         {
+    //             if($(this).is(':checked'))
+    //                 selected_metrics.push($(this).val());
+    //         }
+    //     }
+    //     if ($(this)[0].id === "pollution")
+    //     {
+    //         let metrica = document.getElementById($(this).val()+"_label");
+    //         metrica.style.color="#000";
+    //         metrica.style.background="#FFF";
+    //         {
+    //             if($(this).is(':checked'))
+    //                 selected_metrics.push($(this).val());
+    //         }
+    //     }
+    //     if ($(this)[0].id === "cancer")
+    //     {
+    //         let metrica = document.getElementById($(this).val()+"_label");
+    //         metrica.style.color="#000";
+    //         metrica.style.background="#FFF";
+    //         {
+    //             if($(this).is(':checked'))
+    //                 selected_metrics.push($(this).val());
+    //         }
+    //     }
+    //     if ($(this)[0].id === "food")
+    //     {
+    //         let metrica = document.getElementById($(this).val()+"_label");
+    //         metrica.style.color="#000";
+    //         metrica.style.background="#FFF";
+    //         {
+    //             if($(this).is(':checked'))
+    //                 selected_metrics.push($(this).val());
+    //         }
+    //     }
+    //     if ($(this)[0].id === "unemployment")
+    //     {
+    //         let metrica = document.getElementById($(this).val()+"_label");
+    //         metrica.style.color="#000";
+    //         metrica.style.background="#FFF";
+    //         {
+    //             if($(this).is(':checked'))
+    //                 selected_metrics.push($(this).val());
+    //         }
+    //     }
+    //     if ($(this)[0].id === "homeless")
+    //     {
+    //         let metrica = document.getElementById($(this).val()+"_label");
+    //         metrica.style.color="#000";
+    //         metrica.style.background="#FFF";
+    //         {
+    //             if($(this).is(':checked'))
+    //                 selected_metrics.push($(this).val());
+    //
+    //         }
+    //     }
+    //     if ($(this)[0].id === "housing")
+    //     {
+    //         let metrica = document.getElementById($(this).val()+"_label");
+    //         metrica.style.color="#000";
+    //         metrica.style.background="#FFF";
+    //         {
+    //             if($(this).is(':checked'))
+    //                 selected_metrics.push($(this).val());
+    //         }
+    //     }
+    // })
     // console.log(selected_metrics);
     // for(i = 0; i < ele.length; i++) {
     //     console.log(ele[i]+"the element");
@@ -1627,108 +1708,225 @@ function drawStations() {
         features:geojson_features
     });
     const clusterSourceGeojson = new ol.source.Cluster({
-        distance:  30,
-        minDistance: 30,
+        distance:  60,
+        minDistance: 60,
         source: vectorSourceGeojson,
     });
     const vectorLayerGeojson = new ol.layer.Vector({
         source: clusterSourceGeojson,
         style: function(feature) {
             console.log(feature);
-            let c_hue=[];
-            let dat_array=[];
-            for(let ind=0;ind<selected_metrics.length;ind++){
+            console.log("hi");
+            let c_hue = [];
+            let dat_array = [];
+            for (let ind = 0; ind < selected_metrics.length; ind++) {
                 let mul = 1;
-                let value_sum=0;
-                for(let feat=0;feat<feature.values_.features.length;feat++){
+                let value_sum = 0;
+                for (let feat = 0; feat < feature.values_.features.length; feat++) {
                     if (selected_metrics[ind] === 'lowincfpct') {
                         mul = feature.values_.features[feat].values_['population'];
                     }
-                     value_sum= value_sum+hashmap_metrics[ind][feature.values_.features[feat].values_[selected_metrics[ind]] * mul]/array_metrics[ind].length;
+                    value_sum = value_sum + hashmap_metrics[ind][feature.values_.features[feat].values_[selected_metrics[ind]] * mul] / array_metrics[ind].length;
                 }
-                let value=value_sum/feature.values_.features.length;
+                let value = value_sum / feature.values_.features.length;
                 let c = c_palette[ind]
-                dat_array.push(value*100);
-                let color='transparent';
+                dat_array.push(value * 100);
+                let color = 'transparent';
                 // let value = feature.values_[selected_metrics[ind]];
-                if(value<=0.2)
-                    color='rgba(' + c + ',0.2)';
-                else if(value<=0.4)
-                    color='rgba(' + c + ',0.4)';
-                else if(value<=0.6)
-                    color='rgba(' + c + ',0.6)';
-                else if(value<=0.8)
-                    color='rgba(' + c + ',0.8)';
-                else if(value>0.8)
-                    color='rgba(' + c + ',1.0)';
+                if (value <= 0.2)
+                    color = 'rgba(' + c + ',0.2)';
+                else if (value <= 0.4)
+                    color = 'rgba(' + c + ',0.4)';
+                else if (value <= 0.6)
+                    color = 'rgba(' + c + ',0.6)';
+                else if (value <= 0.8)
+                    color = 'rgba(' + c + ',0.8)';
+                else if (value > 0.8)
+                    color = 'rgba(' + c + ',1.0)';
                 c_hue.push(color);
             }
-            for(let ind=selected_metrics.length;ind<9;ind++){
+            for (let ind = selected_metrics.length; ind < 9; ind++) {
                 c_hue.push('transparent');
             }
-            let label_array=selected_metrics;
-            const data = {
-                labels: label_array,
-                datasets: [
-                    {
-                        label: 'Dataset 1',
-                        data: dat_array,
-                        backgroundColor: 'rgba(255, 0, 0, 0.5)',
-                        borderColor: 'red',
-                        borderWidth: 1,
-                    },
-                ],
-            };
 
-            // Create a canvas element to render the radar chart
-            const canvas = document.createElement('canvas');
-            canvas.width = 90;
-            canvas.height = 90;
+            if (selected_viz === 'radar') {
+                let label_array = selected_metrics;
+                const data = {
+                    labels: label_array,
+                    datasets: [
+                        {
+                            label: 'Dataset 1',
+                            data: dat_array,
+                            backgroundColor: 'rgba(255, 0, 0, 0.5)',
+                            borderColor: 'red',
+                            borderWidth: 1,
+                        },
+                    ],
+                };
 
-            // Get the 2D context of the canvas
-            const ctx = canvas.getContext('2d');
+                // Create a canvas element to render the radar chart
+                const canvas = document.createElement('canvas');
+                canvas.width = 60;
+                canvas.height = 60;
 
-            // Create a new radar chart instance
-            new Chart(ctx, {
-                type: 'radar',
-                data: data,
-                options: {
-                    responsive: false, // Disable responsiveness
-                    maintainAspectRatio: false, // Disable aspect ratio
-                    animation: false, // Disable animation
-                    scales: {
-                        r: {
-                            angleLines: {
-                                display: false, // Hide angle lines
-                            },
-                            grid: {
-                                display: false, // Hide grid lines
-                            },
-                            ticks: {
-                                display: false, // Hide tick labels
+                // Get the 2D context of the canvas
+                const ctx = canvas.getContext('2d');
+
+                // Create a new radar chart instance
+                new Chart(ctx, {
+                    type: 'radar',
+                    data: data,
+                    options: {
+                        responsive: false, // Disable responsiveness
+                        maintainAspectRatio: false, // Disable aspect ratio
+                        animation: false, // Disable animation
+                        scales: {
+                            r: {
+                                angleLines: {
+                                    display: true, // Show angle lines
+                                },
+                                grid: {
+                                    display: true, // Show grid lines
+                                },
+                                ticks: {
+                                    display: false, // Hide tick labels
+                                },
+                                pointLabels: {
+                                    display: false,//Hide the labels
+                                },
                             },
                         },
-                    },
-                    plugins: {
-                        legend: {
-                            display: false, // Hide legend
+                        plugins: {
+                            legend: {
+                                display: false, // Hide legend
+                            },
+                        },
+                        interaction: {
+                            mode: 'nearest', // Disable hover interactions
                         },
                     },
-                    interaction: {
-                        mode: 'nearest', // Disable hover interactions
+                });
+
+                // Create an OpenLayers style with the canvas as the icon
+                const style = new ol.style.Style({
+                    image: new ol.style.Icon({
+                        img: canvas,
+                        imgSize: [canvas.width, canvas.height]
+                    })
+                });
+
+                return style;
+            }
+            if(selected_viz==='polar'){
+                let label_array = selected_metrics;
+                const data = {
+                    labels: label_array,
+                    datasets: [
+                        {
+                            label: 'Dataset 1',
+                            data: dat_array,
+                            backgroundColor: 'rgba(255, 0, 0, 0.5)',
+                            borderColor: 'red',
+                            borderWidth: 1,
+                        },
+                    ],
+                };
+                const canvas = document.createElement('canvas');
+                canvas.width = 60;
+                canvas.height = 60;
+                const ctx = canvas.getContext('2d');
+                new Chart(ctx, {
+                    type: 'polarArea',
+                    data: data,
+                    options: {
+                        responsive: false, // Disable responsiveness
+                        maintainAspectRatio: true, // enable aspect ratio
                     },
-                },
-            });
+                    scale: {
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                });
 
-            // Create an OpenLayers style with the canvas as the icon
-            const style = new ol.style.Style({
-                image: new ol.style.Icon({
-                    img: canvas,
-                    imgSize: [canvas.width, canvas.height]
-                })
-            });
+                // Create an OpenLayers style with the canvas as the icon
+                const style = new ol.style.Style({
+                    image: new ol.style.Icon({
+                        img: canvas,
+                        imgSize: [canvas.width, canvas.height]
+                    })
+                });
 
-            return style;
+                return style;
+            }
+            if(selected_viz==='pie'){
+                let label_array = selected_metrics;
+                const data = {
+                    labels: label_array,
+                    datasets: [
+                        {
+                            label: 'Dataset 1',
+                            data: dat_array,
+                            backgroundColor: 'rgba(255, 0, 0, 0.5)',
+                            borderColor: 'red',
+                            borderWidth: 1,
+                        },
+                    ],
+                };
+                const canvas = document.createElement('canvas');
+                canvas.width = 60;
+                canvas.height = 60;
+                const ctx = canvas.getContext('2d');
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: data,
+                    options: {
+                        responsive: false, // Disable responsiveness
+                        maintainAspectRatio: true, // Disable aspect ratio
+                    },
+                    scale: {
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                });
+
+                // Create an OpenLayers style with the canvas as the icon
+                const style = new ol.style.Style({
+                    image: new ol.style.Icon({
+                        img: canvas,
+                        imgSize: [canvas.width, canvas.height]
+                    })
+                });
+
+                return style;
+            }
+            if(selected_viz==='pattern'){
+                const canvas = document.createElement("canvas");
+                const patternCanvas = document.createElement("canvas");
+                patternCanvas.width = 10;
+                patternCanvas.height = 10;
+                const ctx = canvas.getContext("2d");
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        ctx.fillStyle =c_hue[3*i+j];
+                        ctx.fillRect(j * patternCanvas.width, i * patternCanvas.height, patternCanvas.width, patternCanvas.height);
+                    }
+                }
+                // const pattern = ctx.createPattern(canvas,'repeat');
+                return new ol.style.Style({
+                    image: new ol.style.Icon({
+                        img: canvas,
+                        imgSize: [30,30]
+                    })
+                });
+            }
         }
     });
     const layers=[shpLayer];
@@ -1742,6 +1940,7 @@ function drawStations() {
     // for(let i=0;i<rows;i++){
     //     layers.push(VectorLayerPoiGrouped[i]);
     // }
+    if(showPoi)
     layers.push(vectorLayerPoi);
     if(showNewElec)
     layers.push(vectorLayerNewElec);
@@ -2071,7 +2270,26 @@ function drawMap() {
         });
 
 }
+
 function init() {
+    let temp_metrics=[];
+    $("#checkbox-list").sortable(
+        {
+            update: function() {
+                let sortedList = document.getElementById("checkbox-list");
+                console.log(sortedList);
+                let listElements = sortedList.querySelectorAll("input");
+                for(let thing=0;thing<listElements.length;thing++){
+                    if(listElements[thing].checked)
+                        temp_metrics.push(listElements[thing].value);
+                }
+                metrics_selected=temp_metrics;
+                drawStations();
+            }
+        }
+    );
+
+    $("#checkbox-list").disableSelection();
     let barchartPopup = document.getElementById("popup_barchart");
     barchartPopup.style.display="none";
     // let c_palette = ['255, 0, 0', '0, 255, 0', '0, 0, 255', '255, 255, 0', '255, 0, 255', '0, 255, 255', '128, 0, 128', '255, 165, 0', '0, 128, 128'];

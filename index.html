@@ -44,6 +44,7 @@
       <script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
       <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.min.js"></script>
+      <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
     <script src="v6.1.1-dist/ol.js"></script>
   </head>
 
@@ -99,50 +100,80 @@
     <label for="toggle_ch">Hide Old Stations</label>
     <input type="checkbox" id="toggle_new_ch" name="toggle_new_ch" value="toggle_new_ch" onclick="toggleNewElec()">
     <label for="toggle_ch">Hide New Stations</label>
+    <input type="checkbox" id="toggle_poi" name="toggle_poi" value="toggle_poi" onclick="togglePoi()">
+    <label for="toggle_ch">Hide Pois</label>
     <input type="checkbox" id="toggle_api" name="toggle_api" value="toggle_api" onclick="toggleApi()">
     <label for="toggle_api">Hide API</label>
     <button id="fetch_api" class="btn btn-outline-primary" onclick="showChargers()">Fetch API</button>
     <button id="reset" onclick="reset()" class="btn btn-outline-primary">Reset View
 <!--        <img style="width:20px;height:20px;" src="https://www.clipartmax.com/png/small/100-1009751_reset.png" alt="Reset @clipartmax.com">-->
     </button>
+    <select name="visualization_tool" onchange="drawStations()" id="visualization_tool" class="select">
+        <option value="pattern" >Pattern</option>
+        <option value="radar">Radar Chart</option>
+        <option value="pie">Pie Chart</option>
+        <option value="polar">Polar Chart</option>
+    </select>
 </div>
 <div class="popup" id="popup_metric" style="display:none;background: white;opacity:1;border: 2px solid black;float:right;z-index: 1">
     <h3>Metric to show</h3>
-    <input type="checkbox" id="population" name="metric" value="population" onclick="drawStations()">
-    <label id="population_label" class="checkbox-metric" for="cng">Population</label>
-    <!--        <br>-->
-    <!--          <input type="radio" id="race" name="metric" value="race">-->
-    <!--          <label id="race_label" class="checkbox-label-metric" for="lng">Race</label>-->
-    <br>
-    <input type="checkbox" id="age" name="metric" value="over64pct" onclick="drawStations()">
-    <label id="over64pct_label" class="checkbox-metric" for="lpg">People Over 64</label>
-    <!--        <br>-->
-    <!--          <input type="radio" id="sex" name="metric" value="sex">-->
-    <!--          <label id="sex_label" class="checkbox-label-metric" for="e85">Sex</label>-->
-    <br>
-    <input type="checkbox" id="poverty" name="metric" value="lowincfpct" onclick="drawStations()">
-    <label id="lowincfpct_label" class="checkbox-metric" for="bd">Population below 200% of poverty level</label>
-    <br>
-    <input type="checkbox" id="pollution" name="metric" value="pm25" onclick="drawStations()">
-    <label id="pm25_label" class="checkbox-metric" for="bd">Pollution(PM 2.5 Concentration)</label>
-    <br>
-    <input type="checkbox" id="cancer" name="metric" value="cancer" onclick="drawStations()">
-    <label id="cancer_label" class="checkbox-metric" for="elec">Cancer Risk(Crk)</label>
-    <br>
-    <input type="checkbox" id="food" name="metric" value="foodsrtpct" onclick="drawStations()">
-    <label id="foodsrtpct_label" class="checkbox-metric" for="hy">Food Desert(Fdt)</label>
-    <br>
-    <input type="checkbox" id="unemployment" name="metric" value="unemppct" onclick="drawStations()">
-    <label id="unemppct_label" class="checkbox-metric" for="hy">Unemployment Percentage(Upc)</label>
-    <br>
-    <!--        <input type="radio" id="income" name="metric" value="lowincfpct" onclick="drawStations()">-->
-    <!--        <label id="income_label" class="checkbox-label-metric" for="hy">Income</label>-->
-    <!--        <br>-->
-    <input type="checkbox" id="homeless" name="metric" value="homelespct" onclick="drawStations()">
-    <label id="homelespct_label" class="checkbox-metric" for="hy">Homeless Percentage(Hlp)</label>
-    <br>
-    <input type="checkbox" id="housing" name="metric" value="housebrdn" onclick="drawStations()">
-    <label id="housebrdn_label" class="checkbox-metric" for="hy">Housing Cost(Hoc)</label>
+    <canvas id="legend_canvas" style="width: 150px; height: 150px"></canvas>
+    <ul id="checkbox-list" style="z-index: 100000">
+        <li class="list-metric"><input type="checkbox" id="population" value="population" onclick="drawStations()">
+            <label id="population_label" class="checkbox-metric" for="cng">Population</label></li>
+        <li class="list-metric"><input type="checkbox" id="age" value="over64pct" onclick="drawStations()">
+            <label id="over64pct_label" class="checkbox-metric" for="lpg">People Over 64</label></li>
+        <li class="list-metric"><input type="checkbox" id="poverty" value="lowincfpct" onclick="drawStations()">
+            <label id="lowincfpct_label" class="checkbox-metric" for="bd">Population below 200% of poverty level</label></li>
+        <li class="list-metric"><input type="checkbox" id="pollution" value="pm25" onclick="drawStations()">
+            <label id="pm25_label" class="checkbox-metric" for="bd">Pollution(PM 2.5 Concentration)</label></li>
+        <li class="list-metric"><input type="checkbox" id="cancer" value="cancer" onclick="drawStations()">
+            <label id="cancer_label" class="checkbox-metric" for="elec">Cancer Risk(Crk)</label></li>
+        <li class="list-metric"><input type="checkbox" id="food" value="foodsrtpct" onclick="drawStations()">
+            <label id="foodsrtpct_label" class="checkbox-metric" for="hy">Food Desert(Fdt)</label></li>
+        <li class="list-metric"><input type="checkbox" id="unemployment" value="unemppct" onclick="drawStations()">
+            <label id="unemppct_label" class="checkbox-metric" for="hy">Unemployment Percentage(Upc)</label></li>
+        <li class="list-metric"><input type="checkbox" id="homeless" value="homelespct" onclick="drawStations()">
+            <label id="homelespct_label" class="checkbox-metric" for="hy">Homeless Percentage(Hlp)</label></li>
+        <li class="list-metric"><input type="checkbox" id="housing" value="housebrdn" onclick="drawStations()">
+            <label id="housebrdn_label" class="checkbox-metric" for="hy">Housing Cost(Hoc)</label></li>
+        <!-- Add more checkboxes as needed -->
+    </ul>
+<!--    <input type="checkbox" id="population" name="metric" value="population" onclick="drawStations()">-->
+<!--    <label id="population_label" class="checkbox-metric" for="cng">Population</label>-->
+<!--    &lt;!&ndash;        <br>&ndash;&gt;-->
+<!--    &lt;!&ndash;          <input type="radio" id="race" name="metric" value="race">&ndash;&gt;-->
+<!--    &lt;!&ndash;          <label id="race_label" class="checkbox-label-metric" for="lng">Race</label>&ndash;&gt;-->
+<!--    <br>-->
+<!--    <input type="checkbox" id="age" name="metric" value="over64pct" onclick="drawStations()">-->
+<!--    <label id="over64pct_label" class="checkbox-metric" for="lpg">People Over 64</label>-->
+<!--    &lt;!&ndash;        <br>&ndash;&gt;-->
+<!--    &lt;!&ndash;          <input type="radio" id="sex" name="metric" value="sex">&ndash;&gt;-->
+<!--    &lt;!&ndash;          <label id="sex_label" class="checkbox-label-metric" for="e85">Sex</label>&ndash;&gt;-->
+<!--    <br>-->
+<!--    <input type="checkbox" id="poverty" name="metric" value="lowincfpct" onclick="drawStations()">-->
+<!--    <label id="lowincfpct_label" class="checkbox-metric" for="bd">Population below 200% of poverty level</label>-->
+<!--    <br>-->
+<!--    <input type="checkbox" id="pollution" name="metric" value="pm25" onclick="drawStations()">-->
+<!--    <label id="pm25_label" class="checkbox-metric" for="bd">Pollution(PM 2.5 Concentration)</label>-->
+<!--    <br>-->
+<!--    <input type="checkbox" id="cancer" name="metric" value="cancer" onclick="drawStations()">-->
+<!--    <label id="cancer_label" class="checkbox-metric" for="elec">Cancer Risk(Crk)</label>-->
+<!--    <br>-->
+<!--    <input type="checkbox" id="food" name="metric" value="foodsrtpct" onclick="drawStations()">-->
+<!--    <label id="foodsrtpct_label" class="checkbox-metric" for="hy">Food Desert(Fdt)</label>-->
+<!--    <br>-->
+<!--    <input type="checkbox" id="unemployment" name="metric" value="unemppct" onclick="drawStations()">-->
+<!--    <label id="unemppct_label" class="checkbox-metric" for="hy">Unemployment Percentage(Upc)</label>-->
+<!--    <br>-->
+<!--    &lt;!&ndash;        <input type="radio" id="income" name="metric" value="lowincfpct" onclick="drawStations()">&ndash;&gt;-->
+<!--    &lt;!&ndash;        <label id="income_label" class="checkbox-label-metric" for="hy">Income</label>&ndash;&gt;-->
+<!--    &lt;!&ndash;        <br>&ndash;&gt;-->
+<!--    <input type="checkbox" id="homeless" name="metric" value="homelespct" onclick="drawStations()">-->
+<!--    <label id="homelespct_label" class="checkbox-metric" for="hy">Homeless Percentage(Hlp)</label>-->
+<!--    <br>-->
+<!--    <input type="checkbox" id="housing" name="metric" value="housebrdn" onclick="drawStations()">-->
+<!--    <label id="housebrdn_label" class="checkbox-metric" for="hy">Housing Cost(Hoc)</label>-->
 </div>
 
 <div class="popup" id="popup_add_st" style="background: white;opacity:1;border: 2px solid black;float:right;z-index: 1;display: none">
