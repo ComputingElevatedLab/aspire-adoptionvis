@@ -1,0 +1,92 @@
+body {
+    font-family: 'Red Hat Display', sans-serif;
+}
+
+.center {
+    text-align: center;
+}
+
+.checkbox-label{
+    color: white;
+}
+
+.states {
+    stroke: #000;
+}
+
+.viz-title {
+    font-size: 48px;
+}
+
+.map{
+    height:800px;
+    width: 800px;
+}
+
+.loader {
+    margin-left: 6px;
+    border: 4px solid #f3f3f3; /* Light grey */
+    border-top: 4px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+/*code from w3 schools for popup and spinner*/
+.popup {
+    position: absolute;
+    display: inline-block;
+    align-items: center;
+}
+
+.popup .popuptext {
+    visibility: hidden;
+    margin-right: 10px;
+    width: max-content;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 10px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -40px;
+}
+
+.vertical-center {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+}
+
+/* Toggle this class when clicking on the popup container (hide and show the popup) */
+.popup .show {
+    visibility: visible;
+    -webkit-animation: fadeIn 1s;
+    animation: fadeIn 1s
+}
+
+/* Add animation (fade in the popup) */
+@-webkit-keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+@keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity:1 ;}
+}
+
+.pressed{
+    border: 2px solid blue;
+}
+
