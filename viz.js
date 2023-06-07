@@ -1757,8 +1757,9 @@ else{
                         {
                             label: 'Dataset 1',
                             data: dat_array,
-                            backgroundColor: 'rgba(255, 0, 0, 0.5)',
-                            borderColor: 'red',
+                            pointBackgroundColor: ['rgb(255, 0, 0)', 'rgb(0, 255, 0)', 'rgb(0, 0, 255)', 'rgb(255, 255, 0)', 'rgb(255, 0, 255)', 'rgb(0, 255, 255)', 'rgb(128, 0, 128)', 'rgb(255, 165, 0)', 'rgb(0, 128, 128)'],
+                            backgroundColor: 'gray',
+                            borderColor: 'black',
                             borderWidth: 1,
                         },
                     ],
@@ -1766,8 +1767,8 @@ else{
 
                 // Create a canvas element to render the radar chart
                 const canvas = document.createElement('canvas');
-                canvas.width = 60;
-                canvas.height = 60;
+                canvas.width = 90;
+                canvas.height = 90;
 
                 // Get the 2D context of the canvas
                 const ctx = canvas.getContext('2d');
@@ -1777,6 +1778,9 @@ else{
                     type: 'radar',
                     data: data,
                     options: {
+                        layout: {
+                            padding: 5
+                        },
                         responsive: false, // Disable responsiveness
                         maintainAspectRatio: false, // Disable aspect ratio
                         animation: false, // Disable animation
@@ -1825,8 +1829,8 @@ else{
                         {
                             label: 'Dataset 1',
                             data: dat_array,
-                            backgroundColor: 'rgba(255, 0, 0, 0.5)',
-                            borderColor: 'red',
+                            backgroundColor: ['rgb(255, 0, 0)', 'rgb(0, 255, 0)', 'rgb(0, 0, 255)', 'rgb(255, 255, 0)', 'rgb(255, 0, 255)', 'rgb(0, 255, 255)', 'rgb(128, 0, 128)', 'rgb(255, 165, 0)', 'rgb(0, 128, 128)'],
+                            borderColor: 'black',
                             borderWidth: 1,
                         },
                     ],
@@ -1840,11 +1844,27 @@ else{
                     data: data,
                     options: {
                         responsive: false, // Disable responsiveness
-                        maintainAspectRatio: true, // enable aspect ratio
+                        maintainAspectRatio: false, // Disable aspect ratio
+                        animation: false, // Disable animation,
+                        plugins: {
+                            legend: {
+                                display: false, // Hide legend
+                            },
+                        },
+                        interaction: {
+                            mode: 'nearest', // Disable hover interactions
+                        },
                     },
                     scale: {
                         ticks: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            display:false,
+                        },
+                        radial: {
+                            display:false,
+                        },
+                        pointLabels: {
+                            display: false // Hide the labels
                         }
                     },
                     legend: {
@@ -1870,8 +1890,8 @@ else{
                         {
                             label: 'Dataset 1',
                             data: dat_array,
-                            backgroundColor: 'rgba(255, 0, 0, 0.5)',
-                            borderColor: 'red',
+                            backgroundColor: ['rgb(255, 0, 0)', 'rgb(0, 255, 0)', 'rgb(0, 0, 255)', 'rgb(255, 255, 0)', 'rgb(255, 0, 255)', 'rgb(0, 255, 255)', 'rgb(128, 0, 128)', 'rgb(255, 165, 0)', 'rgb(0, 128, 128)'],
+                            borderColor: 'black',
                             borderWidth: 1,
                         },
                     ],
@@ -1885,7 +1905,16 @@ else{
                     data: data,
                     options: {
                         responsive: false, // Disable responsiveness
-                        maintainAspectRatio: true, // Disable aspect ratio
+                        maintainAspectRatio: false, // Disable aspect ratio
+                        animation: false, // Disable animation,
+                        plugins: {
+                            legend: {
+                                display: false, // Hide legend
+                            },
+                        },
+                        interaction: {
+                            mode: 'nearest', // Disable hover interactions
+                        },
                     },
                     scale: {
                         ticks: {
