@@ -25,7 +25,7 @@ var elec_features = [];
 var new_elec_features=[];
 var station_features=[];
 var new_name,new_charge,new_geometry;
-
+var noDelete=false;
 function reset(){
     let myExtent1=[
         -12553481.8104441,
@@ -41,7 +41,9 @@ function reset(){
         center: center,
     }));
 }
-
+var xMaintained=0;
+var yMaintained=0;
+var featureMaintained;
 function deleteStation(){
     console.log("trying to delete?");
     for(let ind=0;ind<new_elec_features.length;ind++){
@@ -54,6 +56,12 @@ function deleteStation(){
     }
     let pop=document.getElementById('popup');
     pop.style.display="none";
+    map.on('click', function(evt) {
+       let feature_onClick = map.forEachFeatureAtPixel(evt.pixel, function (feature, shpLayer) {
+
+            return feature;
+        })
+    })
     drawStations();
 }
 function divideArray(array, numOfPartitions) {
@@ -266,6 +274,7 @@ function toggleSt(){
     map.getInteractions().forEach(function(interaction) {
       interaction.setActive(false)
     })
+    noDelete=true;
     olMap.style.opacity='0.4';
     map.on('click', function(evt) {
       console.log(evt.coordinate);
@@ -300,6 +309,7 @@ function cancel(){
     map.getInteractions().forEach(function(interaction) {
         interaction.setActive(true)
     })
+    noDelete=false;
 }
 
 function toggleVis(){
@@ -309,6 +319,7 @@ function toggleVis(){
     map.getInteractions().forEach(function(interaction) {
         interaction.setActive(true)
     })
+    noDelete=false;
     let popup_metric=document.getElementById('popup_metric');
     let popup_add_st=document.getElementById('popup_add_st');
     if (popup_metric.style.display === "none") {
@@ -452,7 +463,7 @@ function drawBarChart(bars, metrics_selected, cityName) {
         context.fillStyle = '#000';
         context.font = textSize.toString() + 'px helvetica';
         context.textAlign = 'center';
-        context.fillText(metrics_selected[i], labelX, labelY);
+        // context.fillText(metrics_selected[i], labelX, labelY);
     }
     context.fillStyle = '#000';
     // context.fillText(cityName, 150, 20);
@@ -477,6 +488,15 @@ function hideLoader(){
 }
 
 function drawStations() {
+    console.log("DSCALLED!");
+    if(featureMaintained) {
+        console.log("feature exists");
+        let coordinates_popup = map.getPixelFromCoordinate(featureMaintained.getGeometry().getCoordinates())
+        let mainPopup = document.getElementById('popup');
+        mainPopup.style.left = coordinates_popup[0] + 40 + 'px';
+        mainPopup.style.top = coordinates_popup[1] - 20 + 'px';
+        console.log(coordinates_popup,"Aashay");
+    }
    let selected_viz= document.getElementById("visualization_tool").value;
     console.log(elec_features);
     console.log(newStations);
@@ -615,7 +635,10 @@ function drawStations() {
                         display: false, // Hide tick labels
                     },
                     pointLabels: {
-                        display: true,//Hide the labels
+                        display: true,
+                        font: {
+                            size: 19
+                        }
                     },
                 },
             },
@@ -2034,12 +2057,23 @@ else{
         })
     let feature_onClick;
     map.on('click', function(evt) {
+        if(featureMaintained) {
+            let coordinates_popup = map.getPixelFromCoordinate(featureMaintained.getGeometry().getCoordinates())
+            let mainPopup = document.getElementById('popup');
+            mainPopup.style.left = coordinates_popup[0] + 40 + 'px';
+            mainPopup.style.top = coordinates_popup[1] - 20 + 'px';
+            console.log(coordinates_popup,"Aashay");
+        }
         let pop=document.getElementById('popup');
+        if(!noDelete)
         pop.style.display="block";
         console.log(evt.coordinate);
         station_coordinates=evt.coordinate;
         feature_onClick = map.forEachFeatureAtPixel(evt.pixel, function (feature, shpLayer) {
             console.log(feature);
+            let pixelCoordinates = map.getPixelFromCoordinate(feature.getGeometry().getCoordinates());
+            console.log(pixelCoordinates);
+            featureMaintained=feature;
             let barchartPopup = document.getElementById("popup_barchart");
             barchartPopup.style.left=evt.pointerEvent.clientX+40+'px';
             barchartPopup.style.top=evt.pointerEvent.clientY+40+'px';
@@ -2161,8 +2195,9 @@ else{
             try{popup.innerHTML="Place Name: "+feature.values_.features[0].values_.name;
                 console.log(feature.values_.features[0].values_.name);
                 console.log(new_elec_features);
-                if(feature.values_.features[0].values_.type==="new"){
+                if(feature.values_.features[0].values_.type==="new" && !noDelete){
                     document.getElementById("delete_station").style.display="block";
+                    console.log(noDelete);
                 }
                 else{
                     document.getElementById("delete_station").style.display="none";
@@ -2176,7 +2211,6 @@ else{
                 drawBarChart(bars,metrics_selected,geojsonStr.city);
                 console.log(e);
             }
-
             mainPopup.style.left=evt.pointerEvent.clientX+40+'px';
             mainPopup.style.top=evt.pointerEvent.clientY-20+'px';
             console.log(feature);
@@ -2376,7 +2410,18 @@ function init() {
     //         }
     //     }
     // }
-    map.on('moveend', drawStations());
+    map.on('moveend',function(evt){
+        if(featureMaintained) {
+            console.log("feature exists");
+            let coordinates_popup = map.getPixelFromCoordinate(featureMaintained.getGeometry().getCoordinates())
+            let mainPopup = document.getElementById('popup');
+            mainPopup.style.left = coordinates_popup[0] + 40 + 'px';
+            mainPopup.style.top = coordinates_popup[1] - 20 + 'px';
+            console.log(coordinates_popup,"Aashay");
+        }
+        console.log("move ended");
+        drawStations();
+    } );
     map.on('postrender', drawStations());
     // var docs = document.getElementsByClassName('btn');
     // for (var i = 0; i < docs.length; i++) {
