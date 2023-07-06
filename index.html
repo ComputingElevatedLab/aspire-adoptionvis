@@ -179,6 +179,13 @@
 </div>
 
 <div class="popup" id="popup_add_st" style="background: white;opacity:1;border: 2px solid black;float:right;z-index: 1;display: none">
+    <div style="height:23px">
+        <label style="margin:1px; float:left; margin-left: 30px" for="cancel_button">Add Station</label>
+        <button onclick="cancel()" style="float:right;border: none" name="cancel_button" id="cancel_button">
+            <img style="width: 17px; height: 17px;" src="https://www.clipartmax.com/png/small/144-1442738_free-close-button-x-out-button-png.png" alt="Free Close Button - X Out Button Png @clipartmax.com">
+        </button>
+    </div>
+    <div style="border: 1px solid black"></div>
     <input type="text" id="station_input" name="station" placeholder="Enter The Station name">
     <br>
     <label for="charge_input">Choose the Status:</label>
@@ -195,15 +202,16 @@
 <!--    <br>-->
 <!--    <input type="checkbox" id="station_on_click" value='YES'>-->
 <!--    <label id="station_OC" class="checkbox-metric" >Get coordinates from last click?</label>-->
-    <br>
 <!--    <input onchange="toggleElec()" type="checkbox" id="show/hide_ch" value='YES'>-->
 <!--    <label  class="checkbox-metric" >Show/Hide Chargers</label>-->
 <!--    <br>-->
 <!--    <input onchange="toggleApi()" type="checkbox" id="show/hide_API_ch" value='YES'>-->
 <!--    <label  class="checkbox-metric" >Show/Hide API Chargers</label>-->
 <!--    <br>-->
+    <div>
     <input type="submit" value="OK" onclick="addStation()">
     <input type="submit" value="CANCEL" onclick="cancel()">
+    </div>
     <!--    <input id="fetch_api_ch" type="submit" value="Fetch API chargers" onclick="showChargers()">-->
 </div>
 <!--      <div style="float:left; visibility: hidden" class="loader" id="loader"></div>-->

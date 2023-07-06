@@ -775,6 +775,7 @@ else{
         selected_metrica.style.background='rgb(' + c_palette[ind]+')';
     }
     console.log(selected_metrics+"The selected metrics");
+    //Writing the code for min-max normalizing the features visible(in the current extent)
     for(let ind=0;ind<selected_metrics.length;ind++) {
         let multiplier=1;
         for (thing = 0; thing < shp_features.features.length; thing++) {
@@ -828,7 +829,9 @@ else{
                 lat_coord=com.geometry.coordinates[0];
                 long_coord=com.geometry.coordinates[1];
             }
-
+            var isContained = ol.extent.containsCoordinate(myExtent, [lat_coord,long_coord]);
+            if(isContained){
+                console.log(shp_features.features[thing].properties.city+", "+shp_features.features[thing].properties.county);
             geojson_features.push(new ol.Feature({
                 geometry: new ol.geom.Point([lat_coord,long_coord]),
                 size: 10,
@@ -844,7 +847,7 @@ else{
                 homelespct:shp_features.features[thing].properties.homelespct,
                 housebrdn:shp_features.features[thing].properties.housebrdn,
                 value:shp_features.features[thing].properties[selected_metrics[ind]] * multiplier
-            }))
+            }))}
         }
         array_metrics[ind].sort();
         for (thing = array_metrics[ind].length - 1; thing >= 0; thing--) {
@@ -2074,9 +2077,6 @@ else{
             let pixelCoordinates = map.getPixelFromCoordinate(feature.getGeometry().getCoordinates());
             console.log(pixelCoordinates);
             featureMaintained=feature;
-            let barchartPopup = document.getElementById("popup_barchart");
-            barchartPopup.style.left=evt.pointerEvent.clientX+40+'px';
-            barchartPopup.style.top=evt.pointerEvent.clientY+40+'px';
             console.log(map.getView().getCenter());
             console.log(feature);
             let geojsonStr = feature.values_;
@@ -2213,6 +2213,9 @@ else{
             }
             mainPopup.style.left=evt.pointerEvent.clientX+40+'px';
             mainPopup.style.top=evt.pointerEvent.clientY-20+'px';
+            let barchartPopup = document.getElementById("popup_barchart");
+            barchartPopup.style.left=evt.pointerEvent.clientX+40+'px';
+            barchartPopup.style.top=evt.pointerEvent.clientY-10+'px';
             console.log(feature);
             // document.getElementById("Place_id").innerHTML=feature.values_.features[0].values_.name;
             //document.getElementById("metric_value").innerHTML=Math.pow(feature.style_.image_.radius_,3);
@@ -2418,8 +2421,12 @@ function init() {
             mainPopup.style.left = coordinates_popup[0] + 40 + 'px';
             mainPopup.style.top = coordinates_popup[1] - 20 + 'px';
             console.log(coordinates_popup,"Aashay");
+            let barchartPopup = document.getElementById("popup_barchart");
+            barchartPopup.style.left = coordinates_popup[0] + 40 + 'px';
+            barchartPopup.style.top = coordinates_popup[1] - 10 + 'px';
         }
         console.log("move ended");
+        myExtent = map.getView().calculateExtent(map.getSize());
         drawStations();
     } );
     map.on('postrender', drawStations());

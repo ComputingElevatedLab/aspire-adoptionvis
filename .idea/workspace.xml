@@ -26,6 +26,7 @@
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/a02397403/Desktop/Charging Stations Viz OpenLayers Time Slider&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.DirectoryMappings&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
@@ -60,7 +61,10 @@
       <workItem from="1680616633464" duration="47398000" />
       <workItem from="1682439010456" duration="16456000" />
       <workItem from="1685027965086" duration="26462000" />
-      <workItem from="1685569796331" duration="25818000" />
+      <workItem from="1685569796331" duration="26411000" />
+      <workItem from="1687331620724" duration="4070000" />
+      <workItem from="1687344750259" duration="8405000" />
+      <workItem from="1687916589982" duration="2621000" />
     </task>
     <servers />
   </component>
