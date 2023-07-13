@@ -64,47 +64,6 @@ function deleteStation(){
     })
     drawStations();
 }
-function divideArray(array, numOfPartitions) {
-    const frequencyMap = {};
-    const partitions = [];
-
-    // Count frequency of each element in the array
-    array.forEach(element => {
-        if (!frequencyMap[element]) {
-            frequencyMap[element] = 1;
-        } else {
-            frequencyMap[element]++;
-        }
-    });
-
-    // Sort the elements based on frequency
-    const sortedArray = array.sort((a, b) => frequencyMap[a] - frequencyMap[b]);
-
-    // Calculate target frequency
-    const targetFrequency = array.length / numOfPartitions;
-
-    // Create partitions
-    let partitionIndex = 0;
-    while (sortedArray.length > 0) {
-        if (!partitions[partitionIndex]) {
-            partitions[partitionIndex] = [];
-        }
-
-        const currentElement = sortedArray.shift();
-        partitions[partitionIndex].push(currentElement);
-        frequencyMap[currentElement]--;
-
-        if (partitions[partitionIndex].length === targetFrequency) {
-            partitionIndex++;
-        }
-
-        if (frequencyMap[currentElement] === 0) {
-            delete frequencyMap[currentElement];
-        }
-    }
-
-    return partitions;
-}
 
 let center=ol.proj.fromLonLat([-111.0937, 39.3210]);
 let zoom=7.7;
@@ -483,10 +442,6 @@ function setText(text) {
     }
 }
 
-function hideLoader(){
-    document.getElementById("loader").style.visibility='hidden';
-}
-
 function drawStations() {
     console.log("DSCALLED!");
     if(featureMaintained) {
@@ -788,7 +743,6 @@ else{
             // let arr=[population,over64pct,lowincfpct,pm25,cancer,foodsrtpct,unemppct,homelespct,housebrdn]
             if (max_scale < shp_features.features[thing].properties[selected_metrics[ind]] * multiplier)
                 max_scale = shp_features.features[thing].properties[selected_metrics[ind]] * multiplier;
-            array_metrics[ind].push(shp_features.features[thing].properties[selected_metrics[ind]] * multiplier);
             console.log(shp_features.features[thing]);
             let minimum_lat=shp_features.features[thing].geometry.coordinates[0][shp_features.features[thing].geometry.coordinates[0].length-1][0];
             let minimum_long=shp_features.features[thing].geometry.coordinates[0][shp_features.features[thing].geometry.coordinates[0].length-1][1];
@@ -831,6 +785,7 @@ else{
             }
             var isContained = ol.extent.containsCoordinate(myExtent, [lat_coord,long_coord]);
             if(isContained){
+                array_metrics[ind].push(shp_features.features[thing].properties[selected_metrics[ind]] * multiplier);
                 console.log(shp_features.features[thing].properties.city+", "+shp_features.features[thing].properties.county);
             geojson_features.push(new ol.Feature({
                 geometry: new ol.geom.Point([lat_coord,long_coord]),
@@ -852,7 +807,7 @@ else{
         array_metrics[ind].sort();
         for (thing = array_metrics[ind].length - 1; thing >= 0; thing--) {
             let val = array_metrics[ind][thing];
-            hashmap_metrics[ind][val] = thing;
+            hashmap_metrics[ind][val] = val/array_metrics[ind][array_metrics[ind].length - 1];
         }
     }
     let geo_array=[];
@@ -1734,8 +1689,8 @@ else{
         features:geojson_features
     });
     const clusterSourceGeojson = new ol.source.Cluster({
-        distance:  60,
-        minDistance: 60,
+        distance:  90,
+        minDistance: 90,
         source: vectorSourceGeojson,
     });
     const vectorLayerGeojson = new ol.layer.Vector({
@@ -1752,23 +1707,14 @@ else{
                     if (selected_metrics[ind] === 'lowincfpct') {
                         mul = feature.values_.features[feat].values_['population'];
                     }
-                    value_sum = value_sum + hashmap_metrics[ind][feature.values_.features[feat].values_[selected_metrics[ind]] * mul] / array_metrics[ind].length;
+                    value_sum = value_sum + hashmap_metrics[ind][feature.values_.features[feat].values_[selected_metrics[ind]] * mul];
                 }
                 let value = value_sum / feature.values_.features.length;
                 let c = c_palette[ind]
                 dat_array.push(value * 100);
                 let color = 'transparent';
                 // let value = feature.values_[selected_metrics[ind]];
-                if (value <= 0.2)
-                    color = 'rgba(' + c + ',0.2)';
-                else if (value <= 0.4)
-                    color = 'rgba(' + c + ',0.4)';
-                else if (value <= 0.6)
-                    color = 'rgba(' + c + ',0.6)';
-                else if (value <= 0.8)
-                    color = 'rgba(' + c + ',0.8)';
-                else if (value > 0.8)
-                    color = 'rgba(' + c + ',1.0)';
+                    color = 'rgba(' + c + ','+value.toString()+')';
                 c_hue.push(color);
             }
             for (let ind = selected_metrics.length; ind < 9; ind++) {
@@ -1862,8 +1808,8 @@ else{
                     ],
                 };
                 const canvas = document.createElement('canvas');
-                canvas.width = 60;
-                canvas.height = 60;
+                canvas.width = 90;
+                canvas.height = 90;
                 const ctx = canvas.getContext('2d');
                 new Chart(ctx, {
                     type: 'polarArea',
@@ -1923,8 +1869,8 @@ else{
                     ],
                 };
                 const canvas = document.createElement('canvas');
-                canvas.width = 60;
-                canvas.height = 60;
+                canvas.width = 90;
+                canvas.height = 90;
                 const ctx = canvas.getContext('2d');
                 new Chart(ctx, {
                     type: 'pie',
@@ -1965,8 +1911,8 @@ else{
             if(selected_viz==='pattern'){
                 const canvas = document.createElement("canvas");
                 const patternCanvas = document.createElement("canvas");
-                patternCanvas.width = 10;
-                patternCanvas.height = 10;
+                patternCanvas.width = 15;
+                patternCanvas.height = 15;
                 const ctx = canvas.getContext("2d");
                 for (let i = 0; i < 3; i++) {
                     for (let j = 0; j < 3; j++) {
@@ -1978,7 +1924,7 @@ else{
                 return new ol.style.Style({
                     image: new ol.style.Icon({
                         img: canvas,
-                        imgSize: [30,30]
+                        imgSize: [45,45]
                     })
                 });
             }
@@ -2096,7 +2042,7 @@ else{
                 }
                 let value=value_sum/feature.values_.features.length;
                 console.log(value);
-                bars.push(metrics_hashmap[ind][value]/metrics_array[ind].length);
+                bars.push(metrics_hashmap[ind][value]);
             }
             console.log(bars);
             console.log(geojsonStr);
