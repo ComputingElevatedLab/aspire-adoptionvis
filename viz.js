@@ -539,7 +539,7 @@ function drawStations() {
     let shp_start = (new Date()).getTime();
     // console.table(data)
     let shp_features=tile_data;
-    let min_scale=0;
+    let min_scale=Number.MAX_SAFE_INTEGER;
     let max_scale=0;
     console.log(shp_features.features);
     let array_metrics=[];
@@ -740,9 +740,6 @@ else{
                 console.log("check " + shp_features.features[thing].properties['population']);
                 multiplier = (+shp_features.features[thing].properties['population']);
             }
-            // let arr=[population,over64pct,lowincfpct,pm25,cancer,foodsrtpct,unemppct,homelespct,housebrdn]
-            if (max_scale < shp_features.features[thing].properties[selected_metrics[ind]] * multiplier)
-                max_scale = shp_features.features[thing].properties[selected_metrics[ind]] * multiplier;
             console.log(shp_features.features[thing]);
             let minimum_lat=shp_features.features[thing].geometry.coordinates[0][shp_features.features[thing].geometry.coordinates[0].length-1][0];
             let minimum_long=shp_features.features[thing].geometry.coordinates[0][shp_features.features[thing].geometry.coordinates[0].length-1][1];
@@ -807,7 +804,7 @@ else{
         array_metrics[ind].sort();
         for (thing = array_metrics[ind].length - 1; thing >= 0; thing--) {
             let val = array_metrics[ind][thing];
-            hashmap_metrics[ind][val] = val/array_metrics[ind][array_metrics[ind].length - 1];
+            hashmap_metrics[ind][val] = (val-array_metrics[ind][0])/(array_metrics[ind][array_metrics[ind].length - 1]-array_metrics[ind][0]);
         }
     }
     let geo_array=[];
@@ -1713,8 +1710,16 @@ else{
                 let c = c_palette[ind]
                 dat_array.push(value * 100);
                 let color = 'transparent';
-                // let value = feature.values_[selected_metrics[ind]];
-                    color = 'rgba(' + c + ','+value.toString()+')';
+                if (value <= 0.2)
+                    color = 'rgba(' + c + ',0.2)';
+                else if (value <= 0.4)
+                    color = 'rgba(' + c + ',0.4)';
+                else if (value <= 0.6)
+                    color = 'rgba(' + c + ',0.6)';
+                else if (value <= 0.8)
+                    color = 'rgba(' + c + ',0.8)';
+                else if (value > 0.8)
+                    color = 'rgba(' + c + ',1.0)';
                 c_hue.push(color);
             }
             for (let ind = selected_metrics.length; ind < 9; ind++) {
