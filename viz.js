@@ -1224,7 +1224,7 @@ else{
         minDistance: 10,
         source: vectorSourceE85,
     });
-    //API key AIzaSyAmZFRTRSSez3NZITd4d-QxRF5TRbPnx4U
+
     const clusterSourceBd = new ol.source.Cluster({
         distance:  10,
         minDistance: 10,
@@ -2015,7 +2015,6 @@ else{
         })
     // let GoogleLiveTraffic=new ol.layer.Tile({
     //     source: new ol.source.XYZ({
-    //         url: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&apikey=AIzaSyAmZFRTRSSez3NZITd4d-QxRF5TRbPnx4U',
     //         attributions: '© Google',
     //         maxZoom: 20
     //     })
@@ -2037,7 +2036,6 @@ else{
     // var trafficLayer = new ol.layer.Tile({
     //     opacity: 0.6,
     //     source: new ol.source.XYZ({
-    //         url: 'https://traffic.ls.hereapi.com/traffic/6.3/tile/quadkey/{z}/{x}/{y}.png?apiKey=SwcSKauB4iFWkpWUNsq7bvANTWWD9YPAWYVxQRxL-7U',
     //         attributions: '© HERE',
     //     }),
     // });
@@ -2045,7 +2043,7 @@ else{
     //     key: 'NApOQQkLpPEAsh0OAdXh7VuQRNSWPjxD',
     //     style: 's3',
     // });
-    //NextGen API key: 7bJRJQlcTaq8bA389voncA
+
     osm.setOpacity(0.4);
     // GoogleLiveTraffic.setOpacity(0.4);
     // layers.push(GoogleLiveTraffic);
